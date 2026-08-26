@@ -1,21 +1,20 @@
 <template>
-  <router-link :to="`/courses/${course.id}`" class="course-card">
-    <!-- 썸네일 -->
-    <div class="card-thumb" :class="thumbBg">
-      <img v-if="thumbSrc" :src="thumbSrc" :alt="course.title" class="thumb-img" />
-      <div v-else class="thumb-placeholder">{{ course.category?.charAt(0) }}</div>
+  <router-link :to="`/testbeds/${slot.id}`" class="course-card">
+    <!-- 산업군 타일 -->
+    <div class="card-thumb" :style="{ background: cat.tint }">
+      <span class="thumb-icon" aria-hidden="true">{{ cat.icon }}</span>
     </div>
 
     <!-- 내용 -->
     <div class="card-body">
-      <span class="badge" :class="badgeClass">{{ course.category }}</span>
-      <h3 class="card-title">{{ course.title }}</h3>
+      <span class="badge" :style="categoryStyle(slot.category)">{{ cat.label }}</span>
+      <h3 class="card-title">{{ slot.title }}</h3>
       <div class="card-meta">
-        <span class="instructor">{{ course.instructorName }}</span>
-        <span class="price">₩{{ Number(course.price).toLocaleString() }}</span>
+        <span class="host">{{ hostName }}</span>
+        <span class="fee">₩{{ formatFee(slot.price) }}</span>
       </div>
       <div class="card-footer">
-        <span class="enrolled">수강생 {{ course.enrollmentCount?.toLocaleString() }}명</span>
+        <span class="runs">실증 진행 {{ runCount }}건</span>
       </div>
     </div>
   </router-link>
@@ -23,33 +22,25 @@
 
 <script setup>
 import { computed } from 'vue'
+import { category, categoryStyle, formatFee } from '@/domain/pocket.js'
 
+// prop 이름은 백엔드 응답 형태(course)를 그대로 받되, 화면에서는 실증 슬롯으로 읽는다.
 const props = defineProps({
   course: { type: Object, required: true }
 })
 
-const categoryConfig = {
-  '백엔드':    { bg: 'thumb-teal',   badge: 'badge-teal',   thumb: 'spring_boot' },
-  '프론트엔드':{ bg: 'thumb-teal',   badge: 'badge-teal',   thumb: 'vue_js' },
-  'DevOps':   { bg: 'thumb-blue',   badge: 'badge-blue',   thumb: 'docker' },
-  '데이터':   { bg: 'thumb-purple', badge: 'badge-purple', thumb: 'python' },
-  'AI':       { bg: 'thumb-pink',   badge: 'badge-pink',   thumb: 'generative_ai' },
-}
+const slot = computed(() => props.course)
+const cat = computed(() => category(props.course?.category))
 
-const config = computed(() => categoryConfig[props.course.category] || { bg: 'thumb-gray', badge: 'badge-gray' })
-const thumbBg = computed(() => config.value.bg)
-const badgeClass = computed(() => config.value.badge)
+const hostName = computed(() =>
+  props.course?.instructorName ||
+  props.course?.instructor?.name ||
+  '호스트 미상'
+)
 
-// 썸네일 이미지 동적 import
-const thumbSrc = computed(() => {
-  const key = props.course.thumbnail || config.value.thumb
-  if (!key) return null
-  try {
-    return new URL(`../assets/images/courses/${key}.png`, import.meta.url).href
-  } catch {
-    return null
-  }
-})
+const runCount = computed(() =>
+  Number(props.course?.enrollmentCount ?? props.course?.enrollment_count ?? 0).toLocaleString()
+)
 </script>
 
 <style scoped>
@@ -75,22 +66,9 @@ const thumbSrc = computed(() => {
   justify-content: center;
   overflow: hidden;
 }
-.thumb-teal   { background: #E1F5EE; }
-.thumb-blue   { background: #E6F1FB; }
-.thumb-amber  { background: #FAEEDA; }
-.thumb-purple { background: #EEEDFE; }
-.thumb-pink   { background: #FBEAF0; }
-.thumb-gray   { background: #F1EFE8; }
-.thumb-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 16px;
-}
-.thumb-placeholder {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--color-text-muted);
+.thumb-icon {
+  font-size: 40px;
+  line-height: 1;
 }
 .card-body {
   padding: 14px 16px;
@@ -99,6 +77,7 @@ const thumbSrc = computed(() => {
   gap: 6px;
   flex: 1;
 }
+.badge { align-self: flex-start; }
 .card-title {
   font-size: 14px;
   font-weight: 600;
@@ -110,11 +89,11 @@ const thumbSrc = computed(() => {
   justify-content: space-between;
   align-items: center;
 }
-.instructor {
+.host {
   font-size: 12px;
   color: var(--color-text-secondary);
 }
-.price {
+.fee {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-primary);
@@ -122,7 +101,7 @@ const thumbSrc = computed(() => {
 .card-footer {
   margin-top: 2px;
 }
-.enrolled {
+.runs {
   font-size: 11px;
   color: var(--color-text-muted);
 }

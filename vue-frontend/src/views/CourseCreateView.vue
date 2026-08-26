@@ -9,19 +9,19 @@
           <div class="sidebar-label">메뉴</div>
 
           <router-link
-            to="/courses"
+            to="/testbeds"
             class="sidebar-item"
-            :class="{ active: $route.path === '/courses' }"
+            :class="{ active: $route.path === '/testbeds' }"
           >
-            <span class="si-icon">📚</span> 강의 목록
+            <span class="si-icon">🧭</span> 테스트베드 탐색
           </router-link>
 
           <router-link
-            to="/courses/new"
+            to="/testbeds/new"
             class="sidebar-item"
-            :class="{ active: $route.path === '/courses/new' }"
+            :class="{ active: $route.path === '/testbeds/new' }"
           >
-            <span class="si-icon">✍️</span> 강의 등록
+            <span class="si-icon">➕</span> 실증 슬롯 등록
           </router-link>
 
           <router-link to="/mypage" class="sidebar-item">
@@ -44,41 +44,41 @@
       <main class="main-content">
         <div class="content-header">
           <div>
-            <h1 class="page-title">강의 등록</h1>
-            <p class="page-subtitle">강사 계정으로 새로운 강의를 등록합니다.</p>
+            <h1 class="page-title">실증 슬롯 등록</h1>
+            <p class="page-subtitle">우리 현장을 실증 테스트베드로 공개합니다. 환경 스펙과 실증비를 입력해 주세요.</p>
           </div>
         </div>
 
         <div class="form-card">
           <form class="course-form" @submit.prevent="handleSubmit">
             <div class="form-group">
-              <label class="form-label" for="title">강의명</label>
+              <label class="form-label" for="title">슬롯명</label>
               <input
                 id="title"
                 v-model.trim="form.title"
                 type="text"
                 class="form-input"
-                placeholder="예: Cloud Native App기반 Web Service 개발"
+                placeholder="예: 강남 직영 카페 - 무인 주문 로봇 실증"
                 maxlength="100"
               />
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="description">강의 설명</label>
+              <label class="form-label" for="description">현장 · 환경 스펙</label>
               <textarea
                 id="description"
                 v-model.trim="form.description"
                 class="form-textarea"
                 rows="6"
-                placeholder="강의 소개, 학습 목표, 대상 등을 입력해 주세요."
+                placeholder="현장 규모, 이용객 수, 전원·네트워크 조건, 실증 가능 기간 등을 입력해 주세요."
               ></textarea>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="category">카테고리</label>
+                <label class="form-label" for="category">산업군</label>
                 <select id="category" v-model="form.category" class="form-select">
-                  <option disabled value="">카테고리를 선택하세요</option>
+                  <option disabled value="">산업군을 선택하세요</option>
                   <option
                     v-for="option in categoryOptions"
                     :key="option.value"
@@ -90,7 +90,7 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="price">가격</label>
+                <label class="form-label" for="price">실증비</label>
                 <input
                   id="price"
                   v-model.number="form.price"
@@ -116,13 +116,13 @@
             </div>
 
             <div class="form-actions">
-              <router-link to="/courses" class="btn btn-ghost">
+              <router-link to="/testbeds" class="btn btn-ghost">
                 취소
               </router-link>
 
               <button type="submit" class="btn btn-primary" :disabled="submitting">
                 <span v-if="submitting">등록 중...</span>
-                <span v-else>강의 등록</span>
+                <span v-else>실증 슬롯 등록</span>
               </button>
             </div>
           </form>
@@ -138,6 +138,7 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { courseApi } from '@/api/course.js'
 import { useAuthStore } from '@/store/auth.js'
+import { CATEGORIES, isHost, apiErrorMessage } from '@/domain/pocket.js'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -154,12 +155,8 @@ const validationError = ref('')
 const submitError = ref('')
 const submitSuccess = ref('')
 
-const categoryOptions = [
-  { label: '백엔드', value: 'BACKEND' },
-  { label: '프론트엔드', value: 'FRONTEND' },
-  { label: 'DevOps', value: 'DEVOPS' },
-  { label: 'AI / 데이터', value: 'DATA_SCIENCE' }
-]
+// 산업군 8종을 매핑 모듈에서 그대로 가져온다 (여기에 따로 나열하면 또 갈라진다)
+const categoryOptions = CATEGORIES.map(({ code, label }) => ({ value: code, label }))
 
 function handleLogout() {
   auth.logout()
@@ -169,34 +166,34 @@ function handleLogout() {
 function validateForm() {
   validationError.value = ''
 
-  if (!auth.user || auth.user.role !== 'INSTRUCTOR') {
-    validationError.value = '강사 계정만 강의를 등록할 수 있습니다.'
+  if (!isHost(auth.user?.role)) {
+    validationError.value = '호스트 계정만 실증 슬롯을 등록할 수 있습니다.'
     return false
   }
 
   if (!form.title) {
-    validationError.value = '강의명을 입력해 주세요.'
+    validationError.value = '슬롯명을 입력해 주세요.'
     return false
   }
 
   if (!form.description) {
-    validationError.value = '강의 설명을 입력해 주세요.'
+    validationError.value = '현장·환경 스펙을 입력해 주세요.'
     return false
   }
 
   if (!form.category) {
-    validationError.value = '카테고리를 선택해 주세요.'
+    validationError.value = '산업군을 선택해 주세요.'
     return false
   }
 
   if (form.price === null || form.price === undefined || form.price === '') {
-    validationError.value = '가격을 입력해 주세요.'
+    validationError.value = '실증비를 입력해 주세요.'
     return false
   }
 
   const price = Number(form.price)
   if (Number.isNaN(price) || price < 0) {
-    validationError.value = '가격은 0 이상의 숫자로 입력해 주세요.'
+    validationError.value = '실증비는 0 이상의 숫자로 입력해 주세요.'
     return false
   }
 
@@ -222,7 +219,7 @@ async function handleSubmit() {
     const res = await courseApi.create(payload)
     console.log('[CourseCreate] create response =', res.data)
 
-    submitSuccess.value = '강의가 성공적으로 등록되었습니다.'
+    submitSuccess.value = '실증 슬롯이 등록되었습니다.'
 
     const createdCourseId =
       res.data?.data?.id ??
@@ -230,18 +227,18 @@ async function handleSubmit() {
 
     if (createdCourseId) {
       setTimeout(() => {
-        router.push(`/courses/${createdCourseId}`)
+        router.push(`/testbeds/${createdCourseId}`)
       }, 500)
     } else {
       setTimeout(() => {
-        router.push('/courses')
+        router.push('/testbeds')
       }, 500)
     }
   } catch (error) {
     console.error('[CourseCreate] create failed:', error)
-    submitError.value =
-      error.response?.data?.message ||
-      '강의 등록에 실패했습니다.'
+    submitError.value = apiErrorMessage(error, '실증 슬롯 등록에 실패했습니다.', {
+      403: '호스트 계정만 실증 슬롯을 등록할 수 있습니다.'
+    })
   } finally {
     submitting.value = false
   }

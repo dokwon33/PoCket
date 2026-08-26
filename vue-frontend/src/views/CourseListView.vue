@@ -8,19 +8,27 @@
           <div class="sidebar-label">메뉴</div>
 
           <router-link
-            to="/courses"
+            to="/testbeds"
             class="sidebar-item"
-            :class="{ active: $route.path === '/courses' }"
+            :class="{ active: $route.path === '/testbeds' }"
           >
-            <span class="si-icon">📚</span> 강의 목록
+            <span class="si-icon">🧭</span> 테스트베드 탐색
           </router-link>
 
           <router-link
-            v-if="!isInstructor"
-            to="/enrollments"
+            v-if="host"
+            to="/testbeds/new"
             class="sidebar-item"
           >
-            <span class="si-icon">✅</span> 내 수강 목록
+            <span class="si-icon">➕</span> 실증 슬롯 등록
+          </router-link>
+
+          <router-link
+            v-if="!host"
+            to="/applications"
+            class="sidebar-item"
+          >
+            <span class="si-icon">✅</span> 내 실증 신청
           </router-link>
 
           <router-link
@@ -46,30 +54,33 @@
       <main class="main-content">
         <div class="content-header">
           <div>
-            <h1 class="page-title">강의 목록</h1>
-            <p class="page-subtitle" v-if="isInstructor">
-              강사 계정으로 등록된 강의를 확인하고 새 강의를 추가할 수 있습니다.
+            <h1 class="page-title">테스트베드 탐색</h1>
+            <p class="page-subtitle" v-if="host">
+              호스트 계정으로 등록한 실증 슬롯을 확인하고 새 슬롯을 추가할 수 있습니다.
+            </p>
+            <p class="page-subtitle" v-else>
+              산업군별 실증 현장을 살펴보고 우리 제품에 맞는 테스트베드를 신청하세요.
             </p>
           </div>
 
           <router-link
-            v-if="isInstructor"
-            to="/courses/new"
+            v-if="host"
+            to="/testbeds/new"
             class="btn btn-primary create-course-btn"
           >
-            강의 등록
+            실증 슬롯 등록
           </router-link>
         </div>
 
         <!-- 필터 -->
         <div class="filter-bar">
           <button
-            v-for="cat in categories"
-            :key="cat"
-            :class="['filter-chip', { active: selectedCategory === cat }]"
-            @click="selectCategory(cat)"
+            v-for="cat in categoryFilters"
+            :key="cat.code"
+            :class="['filter-chip', { active: selectedCategory === cat.code }]"
+            @click="selectCategory(cat.code)"
           >
-            {{ cat }}
+            {{ cat.label }}
           </button>
         </div>
 
@@ -85,25 +96,25 @@
           </div>
         </div>
 
-        <!-- 강의 그리드 -->
-        <div v-else-if="filteredCourses.length" class="course-grid fade-in">
+        <!-- 슬롯 그리드 -->
+        <div v-else-if="filteredSlots.length" class="course-grid fade-in">
           <CourseCard
-            v-for="course in filteredCourses"
-            :key="course.id"
-            :course="course"
+            v-for="slot in filteredSlots"
+            :key="slot.id"
+            :course="slot"
           />
         </div>
 
         <!-- 빈 상태 -->
         <div v-else class="empty-state">
-          <p>해당 카테고리의 강의가 없습니다.</p>
+          <p>해당 산업군에 등록된 실증 슬롯이 없습니다.</p>
 
           <router-link
-            v-if="isInstructor"
-            to="/courses/new"
+            v-if="host"
+            to="/testbeds/new"
             class="btn btn-primary empty-action-btn"
           >
-            첫 강의 등록하기
+            첫 실증 슬롯 등록하기
           </router-link>
         </div>
       </main>
@@ -114,28 +125,33 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import AppHeader from '@/components/AppHeader.vue'
 import CourseCard from '@/components/CourseCard.vue'
-import { useCourseStore } from '@/store/course.js'
+import { useCourseStore, ALL_CATEGORIES } from '@/store/course.js'
 import { useAuthStore } from '@/store/auth.js'
+import { isHost } from '@/domain/pocket.js'
 
 const router = useRouter()
 const courseStore = useCourseStore()
 const auth = useAuthStore()
 
-const { categories, loading } = courseStore
+// storeToRefs 로 꺼내야 반응성이 유지된다.
+// 그냥 구조분해하면 loading 이 최초 값(false)으로 고정돼 스켈레톤이 뜨지 않는다.
+const { loading, selectedCategory, courses } = storeToRefs(courseStore)
+const categoryFilters = courseStore.categoryFilters
 
-const selectedCategory = computed(() => courseStore.selectedCategory)
-const isInstructor = computed(() => auth.user?.role === 'INSTRUCTOR')
+const host = computed(() => isHost(auth.user?.role))
 
-const filteredCourses = computed(() => {
-  if (!Array.isArray(courseStore.courses)) return []
-  if (selectedCategory.value === '전체') return courseStore.courses
-  return courseStore.courses.filter(c => c.category === selectedCategory.value)
+// 필터는 enum 코드로 비교한다 (라벨 비교는 라벨 변경 시 조용히 깨진다)
+const filteredSlots = computed(() => {
+  if (!Array.isArray(courses.value)) return []
+  if (selectedCategory.value === ALL_CATEGORIES) return courses.value
+  return courses.value.filter(c => c.category === selectedCategory.value)
 })
 
-function selectCategory(cat) {
-  courseStore.setCategory(cat)
+function selectCategory(code) {
+  courseStore.setCategory(code)
 }
 
 function handleLogout() {
@@ -284,7 +300,7 @@ onMounted(() => {
   border-color: var(--color-primary);
 }
 
-/* 강의 그리드 */
+/* 슬롯 그리드 */
 .course-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

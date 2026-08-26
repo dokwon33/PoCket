@@ -6,16 +6,15 @@
         <div class="sidebar-section">
           <div class="sidebar-label">메뉴</div>
 
-          <router-link to="/courses" class="sidebar-item">
-            <span class="si-icon">📚</span> 강의 목록
+          <router-link to="/testbeds" class="sidebar-item">
+            <span class="si-icon">🧭</span> 테스트베드 탐색
           </router-link>
 
           <router-link
-            v-if="!isInstructor"
-            to="/enrollments"
+            to="/applications"
             class="sidebar-item active"
           >
-            <span class="si-icon">✅</span> 내 수강 목록
+            <span class="si-icon">✅</span> 내 실증 신청
           </router-link>
 
           <router-link to="/mypage" class="sidebar-item">
@@ -35,7 +34,7 @@
       </aside>
 
       <main class="main-content">
-        <h1 class="page-title">내 수강 목록</h1>
+        <h1 class="page-title">내 실증 신청</h1>
 
         <div v-if="loading" class="loading-center">
           <div class="spinner"></div>
@@ -43,29 +42,26 @@
 
         <div v-else-if="enrollments.length" class="enrollment-list fade-in">
           <div v-for="item in enrollments" :key="item.id" class="enrollment-card">
-            <div class="enroll-thumb" :class="getThumbBg(item.course?.category)">
-              <img :src="getThumbSrc(item.course)" :alt="item.course?.title" />
+            <div class="enroll-thumb" :style="{ background: category(item.course?.category).tint }">
+              <span class="enroll-thumb-icon" aria-hidden="true">
+                {{ category(item.course?.category).icon }}
+              </span>
             </div>
 
             <div class="enroll-info">
-              <span class="badge" :class="getBadge(item.course?.category)">
-                {{ item.course?.category }}
+              <span class="badge" :style="categoryStyle(item.course?.category)">
+                {{ categoryLabel(item.course?.category) }}
               </span>
               <h3 class="enroll-title">{{ item.course?.title }}</h3>
-              <p class="enroll-instructor">강사: {{ item.course?.instructorName }}</p>
+              <p class="enroll-instructor">호스트: {{ item.course?.instructorName || '호스트 미상' }}</p>
             </div>
 
             <div class="enroll-status">
-              <span
-                :class="[
-                  'status-badge',
-                  item.status === 'ACTIVE' ? 'status-active' : 'status-pending'
-                ]"
-              >
-                {{ item.status === 'ACTIVE' ? '수강 중' : '대기 중' }}
+              <span :class="['status-badge', `status-${enrollmentStatus(item.status).tone}`]">
+                {{ enrollmentStatus(item.status).label }}
               </span>
-              <router-link :to="`/courses/${item.courseId}`" class="btn btn-ghost btn-sm">
-                강의 보기
+              <router-link :to="`/testbeds/${item.courseId}`" class="btn btn-ghost btn-sm">
+                슬롯 보기
               </router-link>
             </div>
           </div>
@@ -73,9 +69,9 @@
 
         <div v-else class="empty-state">
           <p class="empty-icon">📭</p>
-          <p>수강 중인 강의가 없습니다.</p>
-          <router-link to="/courses" class="btn btn-primary" style="margin-top:16px;">
-            강의 둘러보기
+          <p>아직 신청한 실증 슬롯이 없습니다.</p>
+          <router-link to="/testbeds" class="btn btn-primary" style="margin-top:16px;">
+            테스트베드 둘러보기
           </router-link>
         </div>
       </main>
@@ -89,6 +85,7 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { useAuthStore } from '@/store/auth.js'
+import { category, categoryLabel, categoryStyle, enrollmentStatus, isHost } from '@/domain/pocket.js'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -96,33 +93,7 @@ const auth = useAuthStore()
 const enrollments = ref([])
 const loading = ref(true)
 
-const isInstructor = computed(() => auth.user?.role === 'INSTRUCTOR')
-
-const categoryConfig = {
-  '백엔드': { bg: 'thumb-teal', badge: 'badge-teal', thumb: 'spring_boot' },
-  '프론트엔드': { bg: 'thumb-teal', badge: 'badge-teal', thumb: 'vue_js' },
-  'DevOps': { bg: 'thumb-blue', badge: 'badge-blue', thumb: 'kubernetes' },
-  '데이터': { bg: 'thumb-purple', badge: 'badge-purple', thumb: 'python' },
-  'AI': { bg: 'thumb-pink', badge: 'badge-pink', thumb: 'generative_ai' },
-}
-
-function getThumbBg(cat) {
-  return categoryConfig[cat]?.bg || 'thumb-gray'
-}
-
-function getBadge(cat) {
-  return categoryConfig[cat]?.badge || 'badge-gray'
-}
-
-function getThumbSrc(course) {
-  const key = course?.thumbnail || categoryConfig[course?.category]?.thumb
-  if (!key) return ''
-  try {
-    return new URL(`../assets/images/courses/${key}.png`, import.meta.url).href
-  } catch {
-    return ''
-  }
-}
+const host = computed(() => isHost(auth.user?.role))
 
 function handleLogout() {
   auth.logout()
@@ -130,9 +101,9 @@ function handleLogout() {
 }
 
 onMounted(async () => {
-  // 강사는 이 페이지 접근 불가 → 마이페이지로 이동
-  if (isInstructor.value) {
-    console.warn('[EnrollmentView] instructor tried to access /enrollments, redirect to /mypage')
+  // 호스트는 이 페이지 접근 불가 → 마이페이지로 이동
+  if (host.value) {
+    console.warn('[EnrollmentView] host tried to access /applications, redirect to /mypage')
     router.replace('/mypage')
     return
   }
@@ -303,6 +274,8 @@ onMounted(async () => {
   gap: 4px;
 }
 
+.enroll-info .badge { align-self: flex-start; }
+
 .enroll-title {
   font-size: 15px;
   font-weight: 600;
@@ -327,15 +300,22 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-.status-active {
+.status-done {
   background: #E1F5EE;
   color: #0F6E56;
 }
 
-.status-pending {
+.status-wait {
   background: #FAEEDA;
   color: #854F0B;
 }
+
+.status-off {
+  background: #F1EFE8;
+  color: #5F5E5A;
+}
+
+.enroll-thumb-icon { font-size: 32px; line-height: 1; }
 
 .btn-sm {
   padding: 7px 14px;
