@@ -271,7 +271,8 @@ services:
 
   review-service:
     image: pocket-review-service:latest
-    platform: linux/arm64
+    # platform 을 고정하지 않는다 — 소스에서 직접 빌드하므로
+    # 팀원의 아키텍처(arm64/amd64)에 맞춰 빌드된다.
     build:
       context: ./review-service
       dockerfile: Dockerfile

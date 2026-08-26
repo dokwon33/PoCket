@@ -69,7 +69,11 @@ FK 는 걸지 않는다 — 서비스별 테이블 소유 원칙을 지키기 �
 | GET    | `/api/reviews/enrollment/{enrollmentId}` | 공개 | 해당 실증 건의 양방향 평가 |
 | GET    | `/health` | 공개 | 헬스 체크 |
 
-Swagger: <http://localhost:8090/docs>
+모든 에러 응답(400/401/403/404/409/503)이 OpenAPI 에 기술되어 있으므로,
+API 명세는 코드를 읽지 않고 스펙만으로 작성할 수 있다.
+
+- Swagger UI: <http://localhost:8090/docs>
+- 스펙 내려받기: `curl -s http://localhost:8090/openapi.json -o openapi.json`
 
 ### 등록 요청
 

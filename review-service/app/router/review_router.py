@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.database import get_session
 from app.config.security import get_current_user_id
+from app.model import errors
 from app.model.schemas import (
     PendingReviewResponse,
     ReputationResponse,
@@ -20,7 +21,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/reviews", tags=["reviews"])
 
 
-@router.post("", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ReviewResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses=errors.CREATE_ERRORS,
+)
 async def create_review(
     request: ReviewCreateRequest,
     user_id: int = Depends(get_current_user_id),
@@ -35,7 +41,11 @@ async def create_review(
     return await review_service.create(session, user_id, request)
 
 
-@router.get("/me/pending", response_model=List[PendingReviewResponse])
+@router.get(
+    "/me/pending",
+    response_model=List[PendingReviewResponse],
+    responses=errors.PENDING_ERRORS,
+)
 async def get_my_pending_reviews(
     user_id: int = Depends(get_current_user_id),
     session: AsyncSession = Depends(get_session),
@@ -44,7 +54,11 @@ async def get_my_pending_reviews(
     return await review_service.get_pending(session, user_id)
 
 
-@router.get("/me/written", response_model=List[ReviewResponse])
+@router.get(
+    "/me/written",
+    response_model=List[ReviewResponse],
+    responses=errors.AUTH_ERRORS,
+)
 async def get_my_written_reviews(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -84,7 +98,11 @@ async def get_enrollment_reviews(
     return await review_service.get_by_enrollment(session, enrollment_id)
 
 
-@router.put("/{review_id}", response_model=ReviewResponse)
+@router.put(
+    "/{review_id}",
+    response_model=ReviewResponse,
+    responses=errors.MODIFY_ERRORS,
+)
 async def update_review(
     review_id: int,
     request: ReviewUpdateRequest,
@@ -95,7 +113,11 @@ async def update_review(
     return await review_service.update(session, user_id, review_id, request)
 
 
-@router.delete("/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{review_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=errors.MODIFY_ERRORS,
+)
 async def delete_review(
     review_id: int,
     user_id: int = Depends(get_current_user_id),
