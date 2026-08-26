@@ -1,0 +1,35 @@
+# ── Docker 이미지 아카이브 (GitHub 100MB 제한 초과 · Slack으로 배포받는 파일) ──
+*.tar
+*.tar.gz
+msa-lecture-images.part.*
+
+# ── 빌드 산출물 ──
+build/
+bin/
+out/
+target/
+.gradle/
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# ── 프론트엔드 ──
+node_modules/
+dist/
+vue-frontend/vue-frontend.zip
+*.local
+
+# ── 로그 ──
+*.log
+logs/
+
+# ── IDE ──
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# ── OS ──
+.DS_Store
+Thumbs.db
