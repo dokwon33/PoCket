@@ -132,7 +132,7 @@ const registerForm = ref({ name: '', email: '', password: '', role: 'STUDENT' })
 
 const AUTH_SERVER_URL = import.meta.env.VITE_AUTH_SERVER_URL || 'http://localhost:8080'
 
-const features = ['AI 테스트베드 추천', '실증 신청·승인 관리', '실증 이력과 상호 평가']
+const features = ['AI 테스트베드 추천', '실증 신청·결제·확정', '실증 이력과 상호 평가']
 
 /**
  * 로그인
@@ -359,5 +359,22 @@ async function handleRegister() {
   border-radius: var(--radius-md);
   font-size: 13px;
   color: #16a34a;
+}
+
+/* ── 반응형 ──────────────────────────────────────────────────
+   이 화면에도 폭 미디어쿼리가 없었다. 360/390px 에서 scrollWidth 가 456 이라
+   좌우 2단 그리드가 그대로 유지되며 밖으로 밀려 나갔다(범인: .login-right).
+   로그인은 비로그인 방문자가 처음 만나는 화면이라 폰에서 깨지면 안 된다. */
+@media (max-width: 860px) {
+  .login-layout { grid-template-columns: 1fr; min-height: auto; }
+  /* 좌측 브랜드 패널은 소개용이다. 좁은 화면에서는 로그인 폼이 주인공이다. */
+  .login-left { padding: 32px 24px; gap: 24px; }
+  .brand-content h2 { font-size: 24px; }
+  .login-right { padding: 40px 24px; }
+}
+
+@media (max-width: 480px) {
+  .login-left { display: none; }
+  .login-right { padding: 32px 20px; min-height: 100vh; }
 }
 </style>

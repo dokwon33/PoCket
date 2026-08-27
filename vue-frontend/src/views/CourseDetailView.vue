@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import SlotThumb from '@/components/SlotThumb.vue'
@@ -148,10 +148,14 @@ async function loadReputation(instructorId) {
   }
 }
 
+/** 모집이 끝난 슬롯인가. COURSE_STATUS 의 tone 이 단일 출처다. */
+const closed = computed(() => courseStatus(course.value?.status).tone === 'off')
+
 const buttonLabel = computed(() => {
   if (host.value) return '호스트 계정은 신청 불가'
   if (enrollmentStatus.value === 'ACTIVE') return '내 실증 목록으로 이동'
-  if (enrollmentStatus.value === 'PENDING') return '신청 완료 · 승인 대기 중'
+  if (enrollmentStatus.value === 'PENDING') return '확정 처리 중…'
+  if (closed.value) return '모집이 마감된 슬롯입니다'
   return '실증비 결제하고 신청하기'
 })
 
@@ -159,6 +163,8 @@ const buttonDisabled = computed(() => {
   if (enrolling.value) return true
   if (host.value) return true
   if (enrollmentStatus.value === 'PENDING') return true
+  // 마감된 슬롯에 결제 버튼이 열려 있으면 결제부터 하고 거절당한다
+  if (closed.value && enrollmentStatus.value !== 'ACTIVE') return true
   return false
 })
 
@@ -172,7 +178,11 @@ const helperText = computed(() => {
   }
 
   if (enrollmentStatus.value === 'PENDING') {
-    return '실증 신청이 접수되었습니다. 호스트 승인과 결제가 처리되면 내 실증 목록에 반영됩니다.'
+    return '결제가 확인되면 잠시 후 자동으로 확정됩니다.'
+  }
+
+  if (closed.value) {
+    return '이 슬롯은 모집이 끝나 신청을 받지 않습니다.'
   }
 
   return '결제를 진행하면 실증 신청이 함께 접수됩니다.'
@@ -236,6 +246,26 @@ function closeConfirm() {
   if (!enrolling.value) confirmOpen.value = false
 }
 
+/*
+ * 신청 응답은 PENDING 으로 즉시 돌아오고, ACTIVE 가 되는 것은 enrollment-service 가
+ * Kafka 이벤트를 소비한 뒤다. 그 사이 화면이 스스로 갱신되지 않으면 사용자는
+ * 브라우저를 새로고침하기 전까지 '확정 처리 중' 에 영원히 묶인다.
+ * 확정될 때까지 몇 번만 다시 물어본다. 실패해도 화면은 그대로 동작한다.
+ */
+let confirmTimer = null
+
+function watchUntilConfirmed(tries = 6) {
+  clearTimeout(confirmTimer)
+  if (tries <= 0) return
+
+  confirmTimer = setTimeout(async () => {
+    await loadEnrollmentStatus()
+    if (enrollmentStatus.value === 'PENDING') watchUntilConfirmed(tries - 1)
+  }, 2000)
+}
+
+onBeforeUnmount(() => clearTimeout(confirmTimer))
+
 async function confirmAndEnroll() {
   enrollError.value = ''
 
@@ -245,6 +275,7 @@ async function confirmAndEnroll() {
     await enrollmentApi.enroll(course.value.id)
     enrollmentStatus.value = 'PENDING'
     confirmOpen.value = false
+    watchUntilConfirmed()
   } catch (e) {
     console.error('[CourseDetail] enroll failed:', e)
     enrollError.value = apiErrorMessage(e, '실증 신청에 실패했습니다.', {

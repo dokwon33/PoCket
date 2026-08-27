@@ -149,7 +149,7 @@ const stats = [
 const features = [
   { icon:'target', title:'AI 테스트베드 매칭', desc:'제품 카테고리와 실증 이력을 분석해 맞는 현장을 추천합니다.' },
   { icon:'office', title:'검증된 실제 현장', desc:'카페·물류센터·병원 등 운영 중인 현장이 직접 슬롯을 등록합니다.' },
-  { icon:'document', title:'신청부터 확정까지', desc:'신청·승인·결제를 한 흐름으로 처리해 실증 준비 기간을 줄입니다.' },
+  { icon:'document', title:'신청부터 확정까지', desc:'신청·결제·확정을 한 흐름으로 처리해 실증 준비 기간을 줄입니다.' },
   { icon:'star', title:'상호 평가 기반 신뢰', desc:'실증이 끝나면 호스트와 스타트업이 서로 평가해 다음 매칭의 근거가 됩니다.' },
 ]
 </script>
@@ -258,6 +258,35 @@ const features = [
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-12px); }
 }
+/* ── 반응형 ──────────────────────────────────────────────────
+   이 화면에는 폭 미디어쿼리가 하나도 없었다. 390px 에서 scrollWidth 가 420 이라
+   히어로가 화면 밖으로 밀려 나갔다(범인: .hero-content, right 429).
+   기준 폭은 다른 화면과 같은 992px, 그리고 폰용 600px 두 단계만 쓴다. */
+@media (max-width: 992px) {
+  .hero { padding: 88px 0 72px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  /* 로고 타일이 auto 트랙이라 텍스트 칸의 최소 폭을 밀어낸다 */
+  .hero-visual { display: none; }
+  .hero-title { font-size: 40px; }
+  .hero-desc { max-width: none; }
+  .course-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .features-section { padding: 72px 0; }
+  .popular-section { padding: 72px 0; }
+}
+
+@media (max-width: 600px) {
+  .hero { padding: 56px 0 48px; }
+  .hero-title { font-size: 31px; }
+  .hero-desc { font-size: 16px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; text-align: center; }
+  .hero-stats { flex-wrap: wrap; }
+  .stat + .stat { border-left: none; }
+  .course-grid, .features-grid { grid-template-columns: minmax(0, 1fr); }
+  .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-logo { animation: none; }
 }
@@ -278,7 +307,8 @@ const features = [
 
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* 1fr 은 min-content 아래로 줄어들지 않는다. 좁은 화면에서 칸이 밖으로 밀려 나간다. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 .course-card-landing {
@@ -344,7 +374,7 @@ const features = [
 .features-section { padding: 96px 0; background: transparent; }
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
 }
 .feature-card {

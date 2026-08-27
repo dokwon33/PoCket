@@ -1,5 +1,5 @@
 <template>
-  <router-link :to="`/testbeds/${slot.id}`" class="course-card">
+  <router-link :to="`/testbeds/${slot.id}`" class="course-card" :class="{ closed }">
     <!-- 산업군 타일 -->
     <SlotThumb class="card-thumb" :course="slot" :icon-size="42" />
 
@@ -13,6 +13,8 @@
       </div>
       <div class="card-footer">
         <span class="runs">실증 진행 {{ runCount }}건</span>
+        <!-- 마감을 목록에서 알 수 없으면 상세까지 들어가서야 헛걸음을 안다 -->
+        <span v-if="closed" class="closed-tag">마감</span>
       </div>
     </div>
   </router-link>
@@ -21,7 +23,7 @@
 <script setup>
 import { computed } from 'vue'
 import SlotThumb from '@/components/SlotThumb.vue'
-import { category, categoryStyle, formatFee } from '@/domain/pocket.js'
+import { category, categoryStyle, courseStatus, formatFee } from '@/domain/pocket.js'
 import { hostName as resolveHost } from '@/domain/hosts.js'
 
 // prop 이름은 백엔드 응답 형태(course)를 그대로 받되, 화면에서는 실증 슬롯으로 읽는다.
@@ -33,6 +35,9 @@ const slot = computed(() => props.course)
 const cat = computed(() => category(props.course?.category))
 
 const hostName = computed(() => resolveHost(props.course))
+
+/** 모집 마감 여부. COURSE_STATUS 의 tone 이 단일 출처다. */
+const closed = computed(() => courseStatus(props.course?.status).tone === 'off')
 
 const runCount = computed(() =>
   Number(props.course?.enrollmentCount ?? props.course?.enrollment_count ?? 0).toLocaleString()
@@ -76,11 +81,14 @@ const runCount = computed(() =>
   background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 55%);
   pointer-events: none;
 }
-.thumb-icon {
-  opacity: 0.72;
-  transition: var(--transition);
-}
-.course-card:hover .thumb-icon { transform: scale(1.06); }
+/* 썸네일은 SlotThumb(자식 컴포넌트) 안에 있다.
+   scoped 스타일은 자식 내부에 닿지 않으므로 :deep() 이 필요하고,
+   클래스명도 .thumb-icon 이 아니라 SlotThumb 이 실제로 붙이는 .thumb-symbol 이다.
+   둘 다 어긋나 있어서 카드 hover 확대가 그동안 동작하지 않았다. */
+.card-thumb :deep(.thumb-symbol),
+.card-thumb :deep(.thumb-photo) { transition: var(--transition); }
+.course-card:hover :deep(.thumb-symbol),
+.course-card:hover :deep(.thumb-photo) { transform: scale(1.06); }
 .card-body {
   padding: 18px 20px 20px;
   display: flex;
@@ -117,9 +125,27 @@ const runCount = computed(() =>
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--glass-edge);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .runs {
   font-size: 12px;
   color: var(--color-text-muted);
 }
+
+/* 마감된 슬롯은 목록에서 한눈에 걸러져야 한다 */
+.closed-tag {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.course-card.closed .card-thumb,
+.course-card.closed .card-title,
+.course-card.closed .fee { opacity: 0.55; }
 </style>
