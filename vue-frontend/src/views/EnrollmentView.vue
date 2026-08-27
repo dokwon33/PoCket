@@ -7,28 +7,28 @@
           <div class="sidebar-label">메뉴</div>
 
           <router-link to="/testbeds" class="sidebar-item">
-            <span class="si-icon">🧭</span> 테스트베드 탐색
+            <Icon name="compass" :size="19" class="si-icon" /> 테스트베드 탐색
           </router-link>
 
           <router-link
             to="/applications"
             class="sidebar-item active"
           >
-            <span class="si-icon">✅</span> 내 실증 신청
+            <Icon name="check" :size="19" class="si-icon" /> 내 실증 신청
           </router-link>
 
           <router-link to="/mypage" class="sidebar-item">
-            <span class="si-icon">⭐</span> 마이페이지
+            <Icon name="star" :size="19" class="si-icon" /> 마이페이지
           </router-link>
         </div>
 
         <div class="sidebar-section">
           <div class="sidebar-label">계정</div>
           <router-link to="/mypage" class="sidebar-item">
-            <span class="si-icon">👤</span> 마이페이지
+            <Icon name="user" :size="19" class="si-icon" /> 마이페이지
           </router-link>
           <button class="sidebar-item sidebar-btn" @click="handleLogout">
-            <span class="si-icon">🚪</span> 로그아웃
+            <Icon name="logout" :size="19" class="si-icon" /> 로그아웃
           </button>
         </div>
       </aside>
@@ -40,12 +40,18 @@
           <div class="spinner"></div>
         </div>
 
+        <SessionExpiredNotice v-else-if="authExpired" />
+
         <div v-else-if="enrollments.length" class="enrollment-list fade-in">
           <div v-for="item in enrollments" :key="item.id" class="enrollment-card">
             <div class="enroll-thumb" :style="{ background: category(item.course?.category).tint }">
-              <span class="enroll-thumb-icon" aria-hidden="true">
-                {{ category(item.course?.category).icon }}
-              </span>
+              <Icon
+                class="enroll-thumb-icon"
+                :name="category(item.course?.category).icon"
+                :size="30"
+                :stroke-width="1.5"
+                :style="{ color: category(item.course?.category).ink }"
+              />
             </div>
 
             <div class="enroll-info">
@@ -53,7 +59,7 @@
                 {{ categoryLabel(item.course?.category) }}
               </span>
               <h3 class="enroll-title">{{ item.course?.title }}</h3>
-              <p class="enroll-instructor">호스트: {{ item.course?.instructorName || '호스트 미상' }}</p>
+              <p class="enroll-instructor">호스트: {{ resolveHost(item.course) }}</p>
             </div>
 
             <div class="enroll-status">
@@ -68,7 +74,7 @@
         </div>
 
         <div v-else class="empty-state">
-          <p class="empty-icon">📭</p>
+          <Icon name="inbox" :size="40" :stroke-width="1.4" class="empty-icon" />
           <p>아직 신청한 실증 슬롯이 없습니다.</p>
           <router-link to="/testbeds" class="btn btn-primary" style="margin-top:16px;">
             테스트베드 둘러보기
@@ -83,9 +89,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import Icon from '@/components/Icon.vue'
+import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
+import { authExpired } from '@/domain/session.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { useAuthStore } from '@/store/auth.js'
 import { category, categoryLabel, categoryStyle, enrollmentStatus, isHost } from '@/domain/pocket.js'
+import { hostName as resolveHost, primeHosts } from '@/domain/hosts.js'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -119,6 +129,7 @@ onMounted(async () => {
     } else {
       enrollments.value = []
     }
+    primeHosts(enrollments.value.map((e) => e.course).filter(Boolean))
   } catch (error) {
     console.error('[EnrollmentView] failed to load enrollments:', error)
     enrollments.value = []
@@ -195,7 +206,9 @@ onMounted(async () => {
 }
 
 .si-icon {
-  font-size: 15px;
+  width: 19px;
+  height: 19px;
+  opacity: 0.85;
 }
 
 .main-content {
@@ -218,9 +231,12 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass);
+  border-radius: var(--radius-xl);
   padding: 16px;
   transition: var(--transition);
 }
@@ -315,7 +331,7 @@ onMounted(async () => {
   color: #5F5E5A;
 }
 
-.enroll-thumb-icon { font-size: 32px; line-height: 1; }
+.enroll-thumb-icon { opacity: 0.75; }
 
 .btn-sm {
   padding: 7px 14px;

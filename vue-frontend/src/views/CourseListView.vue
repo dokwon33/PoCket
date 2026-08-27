@@ -12,7 +12,7 @@
             class="sidebar-item"
             :class="{ active: $route.path === '/testbeds' }"
           >
-            <span class="si-icon">🧭</span> 테스트베드 탐색
+            <Icon name="compass" :size="19" class="si-icon" /> 테스트베드 탐색
           </router-link>
 
           <router-link
@@ -20,7 +20,7 @@
             to="/testbeds/new"
             class="sidebar-item"
           >
-            <span class="si-icon">➕</span> 실증 슬롯 등록
+            <Icon name="plus" :size="19" class="si-icon" /> 실증 슬롯 등록
           </router-link>
 
           <router-link
@@ -28,24 +28,24 @@
             to="/applications"
             class="sidebar-item"
           >
-            <span class="si-icon">✅</span> 내 실증 신청
+            <Icon name="check" :size="19" class="si-icon" /> 내 실증 신청
           </router-link>
 
           <router-link
             to="/mypage"
             class="sidebar-item"
           >
-            <span class="si-icon">⭐</span> 마이페이지
+            <Icon name="star" :size="19" class="si-icon" /> 마이페이지
           </router-link>
         </div>
 
         <div class="sidebar-section">
           <div class="sidebar-label">계정</div>
           <router-link to="/mypage" class="sidebar-item">
-            <span class="si-icon">👤</span> 마이페이지
+            <Icon name="user" :size="19" class="si-icon" /> 마이페이지
           </router-link>
           <button class="sidebar-item sidebar-btn" @click="handleLogout">
-            <span class="si-icon">🚪</span> 로그아웃
+            <Icon name="logout" :size="19" class="si-icon" /> 로그아웃
           </button>
         </div>
       </aside>
@@ -96,6 +96,9 @@
           </div>
         </div>
 
+        <!-- 인증 만료 : "데이터 없음" 과 구분해서 말한다 -->
+        <SessionExpiredNotice v-else-if="authExpired" />
+
         <!-- 슬롯 그리드 -->
         <div v-else-if="filteredSlots.length" class="course-grid fade-in">
           <CourseCard
@@ -127,7 +130,10 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import AppHeader from '@/components/AppHeader.vue'
+import Icon from '@/components/Icon.vue'
 import CourseCard from '@/components/CourseCard.vue'
+import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
+import { authExpired } from '@/domain/session.js'
 import { useCourseStore, ALL_CATEGORIES } from '@/store/course.js'
 import { useAuthStore } from '@/store/auth.js'
 import { isHost } from '@/domain/pocket.js'
@@ -205,10 +211,12 @@ onMounted(() => {
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   color: var(--color-text-secondary);
   transition: var(--transition);
   background: none;
@@ -228,11 +236,13 @@ onMounted(() => {
 .sidebar-item.active {
   background: var(--color-primary-light);
   color: var(--color-primary);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .si-icon {
-  font-size: 15px;
+  width: 19px;
+  height: 19px;
+  opacity: 0.85;
 }
 
 .sidebar-btn {
@@ -245,7 +255,7 @@ onMounted(() => {
 }
 
 .content-header {
-  margin-bottom: 20px;
+  margin-bottom: 28px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -253,15 +263,17 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
+  letter-spacing: -0.04em;
   color: var(--color-text-primary);
 }
 
 .page-subtitle {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--color-text-muted);
+  margin-top: 8px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
 }
 
 .create-course-btn {
@@ -274,30 +286,37 @@ onMounted(() => {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .filter-chip {
-  padding: 7px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-  border: 1.5px solid var(--color-border);
-  background: var(--color-bg-primary);
+  padding: 9px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-bg-thin);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
   color: var(--color-text-secondary);
   transition: var(--transition);
   cursor: pointer;
 }
 
 .filter-chip:hover {
-  border-color: var(--color-primary);
   color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-md);
 }
+.filter-chip:active { transform: scale(0.97); }
 
 .filter-chip.active {
   background: var(--color-primary);
   color: #fff;
-  border-color: var(--color-primary);
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(36,34,73,0.10), 0 6px 18px rgba(80,101,192,0.30);
 }
 
 /* 슬롯 그리드 */

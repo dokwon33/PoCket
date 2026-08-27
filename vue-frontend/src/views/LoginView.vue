@@ -175,18 +175,22 @@ async function handleRegister() {
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); }
 .form-input {
-  padding: 10px 14px;
+  padding: 14px 16px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: 15px;
   font-family: var(--font-sans);
   color: var(--color-text-primary);
   background: var(--color-bg-primary);
   transition: var(--transition);
   outline: none;
 }
-.form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
-.btn-full { width: 100%; padding: 12px; font-size: 15px; justify-content: center; margin-top: 4px; }
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(80, 101, 192, 0.14);
+}
+.btn-full { width: 100%; padding: 15px; font-size: 16px; justify-content: center; margin-top: 4px; }
 
 .switch-link {
   text-align: center;

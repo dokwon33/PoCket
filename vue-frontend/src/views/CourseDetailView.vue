@@ -14,15 +14,25 @@
             </p>
 
             <div class="detail-meta">
-              <span>호스트: {{ displayHostName }}</span>
-              <span>실증 진행: {{ displayRunCount }}건</span>
+              <div class="meta-item">
+                <span class="meta-label">호스트</span>
+                <span class="meta-value">{{ displayHostName }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">실증 진행</span>
+                <span class="meta-value">{{ displayRunCount }}건</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">모집 상태</span>
+                <span class="meta-value">{{ courseStatus(course.status).label }}</span>
+              </div>
             </div>
           </div>
 
           <!-- 우측 결제/신청 카드 -->
           <div class="enroll-card fade-in">
             <div class="enroll-thumb" :style="{ background: cat.tint }">
-              <span class="enroll-thumb-icon" aria-hidden="true">{{ cat.icon }}</span>
+              <Icon class="enroll-thumb-icon" :name="cat.icon" :size="52" :stroke-width="1.3" :style="{ color: cat.ink }" />
             </div>
 
             <div class="enroll-body">
@@ -45,9 +55,9 @@
               </p>
 
               <ul class="enroll-info-list">
-                <li>✅ 실증비 결제 시 실증 확정</li>
-                <li>✅ 확정 후 현장 상세 정보 공개</li>
-                <li>✅ 실증 종료 후 상호 평가</li>
+                <li>실증비 결제 시 실증 확정</li>
+                <li>확정 후 현장 상세 정보 공개</li>
+                <li>실증 종료 후 상호 평가</li>
               </ul>
             </div>
           </div>
@@ -59,6 +69,8 @@
       <div class="spinner"></div>
     </div>
 
+    <SessionExpiredNotice v-else-if="authExpired" />
+
     <div v-else class="loading-center">
       <p class="empty-text">실증 슬롯 정보를 불러오지 못했습니다.</p>
     </div>
@@ -69,10 +81,14 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import Icon from '@/components/Icon.vue'
+import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
+import { authExpired } from '@/domain/session.js'
 import { useCourseStore } from '@/store/course.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { useAuthStore } from '@/store/auth.js'
-import { category, categoryStyle, isHost, formatFee, apiErrorMessage } from '@/domain/pocket.js'
+import { category, categoryStyle, courseStatus, isHost, formatFee, apiErrorMessage } from '@/domain/pocket.js'
+import { hostName as resolveHost } from '@/domain/hosts.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,16 +106,7 @@ const host = computed(() => isHost(auth.user?.role))
 const cat = computed(() => category(course.value?.category))
 const displayCategory = computed(() => cat.value.label)
 
-const displayHostName = computed(() => {
-  return (
-    course.value?.instructorName ||
-    course.value?.teacherName ||
-    course.value?.instructor?.name ||
-    course.value?.instructor_name ||
-    course.value?.ownerName ||
-    '호스트 미상'
-  )
-})
+const displayHostName = computed(() => resolveHost(course.value))
 
 const displayRunCount = computed(() =>
   Number(course.value?.enrollmentCount ?? course.value?.enrollment_count ?? 0).toLocaleString()
@@ -229,8 +236,7 @@ watch(
 }
 
 .detail-hero {
-  background: var(--gradient-brand-wash);
-  border-bottom: 1px solid var(--color-border);
+  background: transparent;
   padding: 48px 0;
 }
 
@@ -253,31 +259,70 @@ watch(
 .detail-info .badge { align-self: flex-start; }
 
 .detail-title {
-  font-size: 30px;
+  font-size: 38px;
+  letter-spacing: -0.042em;
   font-weight: 700;
   line-height: 1.3;
 }
 
 .detail-desc {
-  font-size: 15px;
+  font-size: 16.5px;
   color: var(--color-text-secondary);
-  line-height: 1.7;
+  line-height: 1.78;
+  max-width: 56ch;   /* 한 줄이 길면 눈이 다음 줄을 놓친다 */
 }
 
+/* 사실 정보는 유리 트레이에 모아 한 덩어리로 읽히게 한다 */
 .detail-meta {
-  display: flex;
-  gap: 20px;
-  font-size: 14px;
-  color: var(--color-text-secondary);
+  display: inline-flex;
   flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 6px;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass);
+}
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 20px;
+}
+.meta-item + .meta-item { border-left: 1px solid var(--glass-edge); }
+.meta-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.meta-value {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  color: var(--color-text-primary);
 }
 
+/* 결제/신청 카드는 이 화면의 주인공 — 유리로 띄우고 스크롤을 따라오게 한다 */
 .enroll-card {
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  position: sticky;
+  top: 92px;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-glass), 0 24px 60px rgba(36,34,73,0.10);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .enroll-card {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 .enroll-thumb {
@@ -294,7 +339,7 @@ watch(
   padding: 20px;
 }
 
-.enroll-thumb-icon { font-size: 48px; line-height: 1; }
+.enroll-thumb-icon { opacity: 0.72; }
 .thumb-teal { background: #E1F5EE; }
 .thumb-blue { background: #E6F1FB; }
 .thumb-purple { background: #EEEDFE; }
@@ -309,9 +354,11 @@ watch(
 }
 
 .enroll-price {
-  font-size: 26px;
+  font-family: var(--font-display);
+  font-size: 32px;
   font-weight: 700;
-  color: var(--color-primary);
+  letter-spacing: -0.045em;
+  color: var(--color-text-primary);
 }
 
 .btn-full {
@@ -334,8 +381,22 @@ watch(
 }
 
 .enroll-info-list li {
-  font-size: 13px;
+  position: relative;
+  padding-left: 22px;
+  font-size: 13.5px;
   color: var(--color-text-secondary);
+}
+/* 이모지 대신 그린 체크 — 이모지는 플랫폼마다 크기와 색이 달라진다 */
+.enroll-info-list li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid var(--color-primary);
+  border-bottom: 2px solid var(--color-primary);
+  transform: rotate(-45deg);
 }
 
 .error-msg {
