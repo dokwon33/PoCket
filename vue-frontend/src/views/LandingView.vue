@@ -38,14 +38,14 @@
         </div>
         <div class="course-grid">
           <div v-for="slot in featuredSlots" :key="slot.id" class="course-card-landing">
-            <div class="card-thumb" :style="{ background: category(slot.category).tint }">
-              <Icon class="thumb-icon" :name="category(slot.category).icon" :size="42" :stroke-width="1.4" :style="{ color: category(slot.category).ink }" />
+            <div class="card-thumb">
+              <SlotThumb :course="slot" :icon-size="42" />
             </div>
             <div class="card-body">
               <span class="badge" :style="categoryStyle(slot.category)">{{ categoryLabel(slot.category) }}</span>
               <h3 class="card-title">{{ slot.title }}</h3>
               <div class="card-meta">
-                <span class="instructor">{{ slot.host }}</span>
+                <span class="instructor">{{ hostName(slot) }}</span>
                 <span class="price">₩{{ formatFee(slot.price) }}</span>
               </div>
             </div>
@@ -91,21 +91,54 @@
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import SplitPortal from '@/components/SplitPortal.vue'
 import Icon from '@/components/Icon.vue'
 import CountUp from '@/components/CountUp.vue'
-import { category, categoryLabel, categoryStyle, formatFee } from '@/domain/pocket.js'
+import SlotThumb from '@/components/SlotThumb.vue'
+import { categoryLabel, categoryStyle, formatFee } from '@/domain/pocket.js'
+import { hostName, primeHosts } from '@/domain/hosts.js'
+import { courseApi } from '@/api/course.js'
+import { useAuthStore } from '@/store/auth.js'
 
-// 랜딩 전용 예시 데이터 (API 미연동 — 로그인 전에도 보여주는 소개용 카드)
-const featuredSlots = [
-  { id:1, title:'강남 직영 카페 · 무인 주문 로봇 실증',   category:'BACKEND',      host:'브루잉랩',      price:1200000 },
-  { id:2, title:'대형 마트 3개점 · 스마트 선반 실증',      category:'FRONTEND',     host:'리테일파트너스', price:2400000 },
-  { id:3, title:'수도권 물류센터 · 자율주행 AGV 실증',     category:'DEVOPS',       host:'한성로지스',    price:5600000 },
-  { id:4, title:'종합병원 외래 · 문진 AI 실증',            category:'DATA_SCIENCE', host:'미래의료원',    price:4800000 },
-  { id:5, title:'강남 오피스 12층 · 스마트 회의실 실증',   category:'MOBILE',       host:'워크스페이스K', price:1800000 },
-  { id:6, title:'IDC 상면 · 발열 예측 센서 실증',          category:'DATABASE',     host:'클라우드센터',  price:3200000 },
+/**
+ * 로그인 전에 보여줄 소개용 카드.
+ *
+ * 게이트웨이가 /api/courses 를 익명에게 401 로 막기 때문에, 로그인 전에는
+ * 실제 목록을 받을 수가 없다. 그때 이 카드로 화면을 채운다.
+ * 로그인한 사용자에게는 아래에서 실제 슬롯으로 교체한다.
+ */
+const SAMPLE_SLOTS = [
+  { id:1, title:'강남 직영 카페 · 무인 주문 로봇 실증',   category:'BACKEND',      instructorName:'브루잉랩',      price:1200000 },
+  { id:2, title:'대형 마트 3개점 · 스마트 선반 실증',      category:'FRONTEND',     instructorName:'리테일파트너스', price:2400000 },
+  { id:3, title:'수도권 물류센터 · 자율주행 AGV 실증',     category:'DEVOPS',       instructorName:'한성로지스',    price:5600000 },
+  { id:4, title:'종합병원 외래 · 문진 AI 실증',            category:'DATA_SCIENCE', instructorName:'미래의료원',    price:4800000 },
+  { id:5, title:'강남 오피스 12층 · 스마트 회의실 실증',   category:'MOBILE',       instructorName:'워크스페이스K', price:1800000 },
+  { id:6, title:'IDC 상면 · 발열 예측 센서 실증',          category:'DATABASE',     instructorName:'클라우드센터',  price:3200000 },
 ]
+
+const featuredSlots = ref(SAMPLE_SLOTS)
+
+onMounted(async () => {
+  // 익명이면 요청하지 않는다 — 401 인터셉터가 "세션 만료"로 오인해 토큰을 마크한다
+  if (!useAuthStore().accessToken) return
+
+  try {
+    const res = await courseApi.getCourses()
+    const list = Array.isArray(res.data?.data) ? res.data.data : []
+    if (!list.length) return
+
+    // 서버가 정렬을 받지 않는다. "인기"는 신청 건수 기준으로 화면에서 골라 낸다.
+    featuredSlots.value = [...list]
+      .sort((a, b) => (b.enrollmentCount ?? 0) - (a.enrollmentCount ?? 0))
+      .slice(0, 6)
+
+    await primeHosts(featuredSlots.value)
+  } catch (e) {
+    console.warn('[PoCket] 인기 테스트베드 조회 실패 — 소개용 카드를 유지한다:', e?.response?.status)
+  }
+})
 
 const stats = [
   { value: 1200,  suffix: '+', label: '실증 슬롯' },
@@ -283,11 +316,11 @@ const features = [
 .thumb-blue   { background: #E6F1FB; }
 .thumb-purple { background: #EEEDFE; }
 .thumb-pink   { background: #FBEAF0; }
-.thumb-icon {
-  opacity: 0.72;
-  transition: var(--transition);
-}
-.course-card-landing:hover .thumb-icon { transform: scale(1.06); }
+/* 썸네일은 SlotThumb(자식 컴포넌트) 안에 있어 :deep() 으로 짚어야 한다 */
+.card-thumb :deep(.thumb-symbol),
+.card-thumb :deep(.thumb-photo) { transition: var(--transition); }
+.course-card-landing:hover :deep(.thumb-symbol),
+.course-card-landing:hover :deep(.thumb-photo) { transform: scale(1.06); }
 .card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; }
 .card-body .badge { align-self: flex-start; }
 .card-title {

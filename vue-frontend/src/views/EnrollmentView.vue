@@ -371,14 +371,19 @@ onMounted(async () => {
   font-size: 13px;
 }
 
+/* Icon 은 display:block 이라 text-align 으로는 가운데로 오지 않는다.
+   그대로 두면 아이콘만 왼쪽 끝에 홀로 떠서 문구와 상관없는 그림처럼 보인다.
+   결제 내역 화면과 같은 방식(flex 세로 정렬)으로 맞춘다. */
 .empty-state {
-  text-align: center;
-  padding: 80px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 24px;
   color: var(--color-text-muted);
 }
 
 .empty-icon {
-  font-size: 48px;
+  color: var(--color-text-muted);
   margin-bottom: 12px;
 }
 
