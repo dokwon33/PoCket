@@ -33,3 +33,13 @@ logs/
 # ── OS ──
 .DS_Store
 Thumbs.db
+
+# ── 내부 기획/설계 문서 (GitHub 미공개) ──
+docs/
+
+# ── 파이썬 ──
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/

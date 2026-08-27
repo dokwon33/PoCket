@@ -266,6 +266,46 @@ services:
     networks:
       - lecture-net
 
+
+  # PoCket 확장 — 팀 신규 개발 (게이트웨이 미경유, 브라우저 직접 호출)
+
+  review-service:
+    image: pocket-review-service:latest
+    # platform 을 고정하지 않는다 — 소스에서 직접 빌드하므로
+    # 팀원의 아키텍처(arm64/amd64)에 맞춰 빌드된다.
+    build:
+      context: ./review-service
+      dockerfile: Dockerfile
+    container_name: pocket-review
+    ports:
+      - "8090:8090"
+    environment:
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka
+      - EUREKA_INSTANCE_HOST=review-service
+      - JWT_ISSUER_URI=http://localhost:8080
+      - JWK_SET_URI=http://auth-server:9000/oauth2/jwks
+      - JWT_USER_ID_CLAIM=user_id
+      - ENROLLMENT_SERVICE_URL=http://enrollment-service:8083
+      - COURSE_SERVICE_URL=http://course-service:8082
+      - DB_HOST=lecturedb
+      - DB_PORT=3306
+      - DB_NAME=lecture_db
+      - DB_USER=manager
+      - DB_PASSWORD=SqlDba-1
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      auth-server:
+        condition: service_healthy
+      enrollment-service:
+        condition: service_started
+      course-service:
+        condition: service_started
+    networks:
+      - lecture-net
+
 volumes:
   mariadb_data:
   kafka_data:
