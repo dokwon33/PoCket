@@ -14,6 +14,13 @@
 
         <SessionExpiredNotice v-else-if="authExpired" />
 
+        <LoadFailedNotice
+          v-else-if="loadError"
+          title="결제 내역을 불러오지 못했습니다"
+          :message="loadError"
+          @retry="load()"
+        />
+
         <ul v-else-if="payments.length" class="payment-list fade-in">
           <li v-for="p in payments" :key="p.paymentId" class="payment-card">
             <div class="pay-main">
@@ -58,17 +65,19 @@ import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import Icon from '@/components/Icon.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
+import LoadFailedNotice from '@/components/LoadFailedNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { paymentApi } from '@/api/payment.js'
 import { courseApi } from '@/api/course.js'
 import { useAuthStore } from '@/store/auth.js'
-import { categoryLabel, categoryStyle, formatFee, paymentStatus } from '@/domain/pocket.js'
+import { apiErrorMessage, categoryLabel, categoryStyle, formatFee, paymentStatus } from '@/domain/pocket.js'
 
 const auth = useAuthStore()
 
 const payments = ref([])
 const slots = ref({})
 const loading = ref(true)
+const loadError = ref('')
 
 const slotOf = (p) => slots.value[p?.courseId] || {}
 
@@ -100,7 +109,10 @@ function shortTx(tx) {
   return s.length > 13 ? `${s.slice(0, 8)}…${s.slice(-4)}` : s || '-'
 }
 
-onMounted(async () => {
+/** 재시도 버튼이 다시 부를 수 있도록 뽑아 둔다 */
+async function load() {
+  loading.value = true
+  loadError.value = ''
   try {
     const res = await paymentApi.listByUser(auth.user?.id)
     const list = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : []
@@ -109,10 +121,14 @@ onMounted(async () => {
   } catch (e) {
     console.error('[Payment] 결제 내역 조회 실패:', e)
     payments.value = []
+    // 방금 결제한 사용자에게 "결제 내역이 없습니다" 라고 하면 안 된다
+    loadError.value = apiErrorMessage(e, '결제 내역을 불러오지 못했습니다.')
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(load)
 </script>
 
 <style scoped>

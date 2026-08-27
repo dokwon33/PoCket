@@ -49,13 +49,13 @@ const routes = [
     path: '/applications',
     name: 'ApplicationList',
     component: () => import('@/views/EnrollmentView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, startupOnly: true }
   },
   {
     path: '/payments',
     name: 'PaymentList',
     component: () => import('@/views/PaymentView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, startupOnly: true }
   },
   {
     path: '/mypage',
@@ -78,7 +78,10 @@ router.beforeEach((to) => {
   const auth = useAuthStore()
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'Login' }
+    // 로그인한 뒤 원래 가려던 곳으로 돌려보낸다.
+    // 이게 없으면 동료가 보낸 슬롯 링크를 열었다가 로그인하면
+    // 95건짜리 목록에 떨어져서 그 슬롯을 처음부터 다시 찾아야 한다.
+    return { name: 'Login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
@@ -88,6 +91,12 @@ router.beforeEach((to) => {
   // 슬롯 등록은 호스트만
   if (to.meta.hostOnly && !isHost(auth.user?.role)) {
     return { name: 'TestbedList' }
+  }
+
+  // 신청·결제는 스타트업만. 호스트가 URL 로 직접 들어오면 마이페이지로.
+  // 메뉴에서 숨기는 것만으로는 북마크·뒤로가기를 막지 못한다.
+  if (to.meta.startupOnly && isHost(auth.user?.role)) {
+    return { name: 'MyPage' }
   }
 })
 

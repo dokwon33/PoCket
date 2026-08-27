@@ -119,6 +119,7 @@ import { apiErrorMessage } from '@/domain/pocket.js'
 
 const auth = useAuthStore()
 const route = useRoute()
+const REDIRECT_KEY = 'pocket.login.redirect'
 const router = useRouter()
 
 // /login 은 로그인, /register 는 회원가입. 같은 화면을 경로로 나눈다.
@@ -155,6 +156,14 @@ async function authServerReachable() {
 
 function proceedToAuthorize() {
   loginForm.value.password = ''   // 화면 상태에 남기지 않는다
+
+  // 인가 코드 발급을 위해 인증 서버로 나갔다 오면 라우터 쿼리가 사라진다.
+  // 원래 가려던 곳을 왕복 동안 보관해 두고 CallbackView 가 꺼내 쓴다.
+  const back = route.query.redirect
+  if (typeof back === 'string' && back.startsWith('/')) {
+    sessionStorage.setItem(REDIRECT_KEY, back)
+  }
+
   auth.redirectToLogin()          // 세션이 생겼으니 인가 코드 발급으로
 }
 

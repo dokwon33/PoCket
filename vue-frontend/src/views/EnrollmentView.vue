@@ -13,6 +13,13 @@
 
         <SessionExpiredNotice v-else-if="authExpired" />
 
+        <LoadFailedNotice
+          v-else-if="loadError"
+          title="신청 내역을 불러오지 못했습니다"
+          :message="loadError"
+          @retry="load()"
+        />
+
         <div v-else-if="enrollments.length" class="enrollment-list fade-in">
           <div v-for="item in enrollments" :key="item.id" class="enrollment-card">
             <SlotThumb class="enroll-thumb" :course="slotOf(item)" :icon-size="30" />
@@ -73,7 +80,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import Icon from '@/components/Icon.vue'
@@ -81,18 +87,19 @@ import SlotThumb from '@/components/SlotThumb.vue'
 import StarRating from '@/components/StarRating.vue'
 import ReviewModal from '@/components/ReviewModal.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
+import LoadFailedNotice from '@/components/LoadFailedNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
 import { reviewApi } from '@/api/review.js'
 import { useAuthStore } from '@/store/auth.js'
-import { category, categoryLabel, categoryStyle, enrollmentStatus, isHost } from '@/domain/pocket.js'
+import { apiErrorMessage, category, categoryLabel, categoryStyle, enrollmentStatus } from '@/domain/pocket.js'
 import { hostName as resolveHost, primeHosts } from '@/domain/hosts.js'
 
-const router = useRouter()
 const auth = useAuthStore()
 
 const enrollments = ref([])
+const loadError = ref('')
 const loading = ref(true)
 
 /**
@@ -173,16 +180,11 @@ async function fillSlots(list) {
   primeHosts(Object.values(slots.value))
 }
 
-const host = computed(() => isHost(auth.user?.role))
 
-onMounted(async () => {
-  // 호스트는 이 페이지 접근 불가 → 마이페이지로 이동
-  if (host.value) {
-    console.warn('[EnrollmentView] host tried to access /applications, redirect to /mypage')
-    router.replace('/mypage')
-    return
-  }
-
+/** 재시도 버튼이 다시 부를 수 있도록 뽑아 둔다 */
+async function load() {
+  loading.value = true
+  loadError.value = ''
   try {
     const res = await enrollmentApi.getMyEnrollments()
     console.log('[EnrollmentView] my enrollments response:', res.data)
@@ -195,13 +197,17 @@ onMounted(async () => {
       enrollments.value = []
     }
     await Promise.all([fillSlots(enrollments.value), loadReviews()])
-  } catch (error) {
-    console.error('[EnrollmentView] failed to load enrollments:', error)
+  } catch (e) {
+    console.error('[EnrollmentView] failed to load enrollments:', e)
     enrollments.value = []
+    // 빈 배열로 두고 빈 상태를 그리면 "신청이 사라졌다"고 읽힌다
+    loadError.value = apiErrorMessage(e, '신청 내역을 불러오지 못했습니다.')
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(load)
 </script>
 
 <style scoped>
