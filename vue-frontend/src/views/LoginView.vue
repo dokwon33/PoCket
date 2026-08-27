@@ -4,12 +4,12 @@
       <!-- 좌측 브랜딩 -->
       <div class="login-left">
         <div class="brand">
-          <img src="@/assets/images/logo/main_logo.png" alt="LearnNexus" class="brand-logo" />
-          <span class="brand-name">LearnNexus</span>
+          <img src="@/assets/images/logo/pocket-symbol-inverse.svg" alt="PoCket" class="brand-logo" />
+          <span class="brand-name">PoCket</span>
         </div>
         <div class="brand-content">
-          <h2>다시 만나서<br>반갑습니다</h2>
-          <p>로그인하고 나만의 학습 여정을 이어가세요.</p>
+          <h2>제품을 검증할<br>현장을 만나세요</h2>
+          <p>로그인하고 우리 제품에 맞는 실증 테스트베드를 확인하세요.</p>
           <ul class="feature-list">
             <li v-for="f in features" :key="f">
               <span class="dot"></span>{{ f }}
@@ -26,7 +26,7 @@
           <!-- 로그인 영역 -->
           <div v-if="!showRegister" class="section">
             <h3 class="section-title">로그인</h3>
-            <p class="section-desc">LearnNexus 계정으로 로그인합니다.</p>
+            <p class="section-desc">PoCket 계정으로 로그인합니다.</p>
             <button class="btn btn-primary btn-full" @click="handleOAuth">로그인</button>
             <div class="switch-link">
               계정이 없으신가요?
@@ -53,8 +53,8 @@
               <div class="form-group">
                 <label class="form-label">역할</label>
                 <select v-model="registerForm.role" class="form-input">
-                  <option value="STUDENT">학생</option>
-                  <option value="INSTRUCTOR">강사</option>
+                  <option value="STUDENT">스타트업 — 실증할 제품이 있어요</option>
+                  <option value="INSTRUCTOR">테스트베드 호스트 — 현장을 제공해요</option>
                 </select>
               </div>
               <div v-if="error" class="error-msg">{{ error }}</div>
@@ -80,6 +80,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/store/auth.js'
 import { authApi } from '@/api/auth.js'
+import { apiErrorMessage } from '@/domain/pocket.js'
 
 const auth = useAuthStore()
 
@@ -90,7 +91,7 @@ const success = ref('')
 
 const registerForm = ref({ name: '', email: '', password: '', role: 'STUDENT' })
 
-const features = ['수강 중인 강의 이어보기', '맞춤 강의 추천', '수료증 관리']
+const features = ['AI 테스트베드 추천', '실증 신청·승인 관리', '실증 이력과 상호 평가']
 
 function handleOAuth() {
   auth.redirectToLogin()
@@ -109,7 +110,9 @@ async function handleRegister() {
       success.value = ''
     }, 2000)
   } catch (e) {
-    error.value = e.response?.data?.message || '회원가입에 실패했습니다.'
+    error.value = apiErrorMessage(e, '회원가입에 실패했습니다.', {
+      409: '이미 가입된 이메일입니다.'
+    })
   } finally {
     loading.value = false
   }
@@ -129,14 +132,14 @@ async function handleRegister() {
   min-height: 100vh;
 }
 .login-left {
-  background: linear-gradient(160deg, #1a4f8a 0%, #185FA5 50%, #1e7bc4 100%);
+  background: var(--gradient-brand-deep);
   padding: 48px;
   display: flex;
   flex-direction: column;
   gap: 48px;
 }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-logo { width: 40px; height: 40px; border-radius: 10px; object-fit: contain; }
+.brand-logo { width: 40px; height: 40px; object-fit: contain; }
 .brand-name { font-size: 18px; font-weight: 700; color: #fff; }
 .brand-content h2 {
   font-size: 32px; font-weight: 700; color: #fff;

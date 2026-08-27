@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="PoCket">
+  <title>PoCket favicon 32</title>
+  <defs>
+    <linearGradient id="pkt-fav32" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7F77DD"/>
+      <stop offset="1" stop-color="#378ADD"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.25" y="1.25" width="29.5" height="29.5" rx="8" fill="none" stroke="#B9B4EC" stroke-width="2.5"/>
+  <rect x="10" y="10" width="12" height="12" rx="3" fill="url(#pkt-fav32)"/>
+</svg>

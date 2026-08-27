@@ -43,3 +43,6 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+
+# ── 에디터/도구 로컬 설정 ──
+.omc/

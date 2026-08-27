@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width="88" height="88" role="img" aria-label="PoCket">
+  <title>PoCket symbol, inverse</title>
+  <g fill="none" stroke="#A0A09F" stroke-width="3">
+    <rect x="1.5" y="1.5" width="21" height="21" rx="6.5"/>
+    <rect x="33.5" y="1.5" width="21" height="21" rx="6.5"/>
+    <rect x="65.5" y="1.5" width="21" height="21" rx="6.5"/>
+    <rect x="1.5" y="33.5" width="21" height="21" rx="6.5"/>
+    <rect x="65.5" y="33.5" width="21" height="21" rx="6.5"/>
+    <rect x="1.5" y="65.5" width="21" height="21" rx="6.5"/>
+    <rect x="33.5" y="65.5" width="21" height="21" rx="6.5"/>
+    <rect x="65.5" y="65.5" width="21" height="21" rx="6.5"/>
+  </g>
+  <rect x="32" y="32" width="24" height="24" rx="8" fill="#FFFFFF"/>
+</svg>

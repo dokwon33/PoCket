@@ -1,48 +1,49 @@
 <template>
   <div class="landing">
+    <SplitPortal />
     <AppHeader />
 
     <!-- 히어로 섹션 -->
     <section class="hero">
       <div class="hero-inner">
         <div class="hero-content fade-in-up">
-          <span class="hero-badge">MSA 기반 교육 플랫폼</span>
-          <h1 class="hero-title">배움을 더 스마트하게,<br>커리어를 더 빠르게</h1>
-          <p class="hero-desc">개발, 디자인, 비즈니스 분야의 전문가 강의를 수강하고 실력을 키워보세요.</p>
+          <span class="hero-badge">B2B 실증 테스트베드 매칭</span>
+          <h1 class="hero-title">제품을 검증할 현장,<br>더 빠르게 찾으세요</h1>
+          <p class="hero-desc">카페·물류센터·병원 등 실제 현장이 등록한 실증 슬롯을 AI가 우리 제품에 맞춰 추천합니다.</p>
           <div class="hero-actions">
             <router-link to="/login" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
-            <router-link to="/courses" class="btn btn-outline btn-lg">강의 둘러보기</router-link>
+            <router-link to="/testbeds" class="btn btn-outline btn-lg">테스트베드 둘러보기</router-link>
           </div>
           <div class="hero-stats">
-            <div class="stat"><span class="stat-num">1,200+</span><span class="stat-label">강의</span></div>
-            <div class="stat"><span class="stat-num">340+</span><span class="stat-label">강사</span></div>
-            <div class="stat"><span class="stat-num">28,000+</span><span class="stat-label">수강생</span></div>
+            <div class="stat"><span class="stat-num">1,200+</span><span class="stat-label">실증 슬롯</span></div>
+            <div class="stat"><span class="stat-num">340+</span><span class="stat-label">호스트 현장</span></div>
+            <div class="stat"><span class="stat-num">28,000+</span><span class="stat-label">실증 완료</span></div>
           </div>
         </div>
         <div class="hero-visual fade-in">
-          <img src="@/assets/images/logo/main_logo.png" alt="LearnNexus" class="hero-logo" />
+          <img src="@/assets/images/logo/pocket-app-icon-1024.svg" alt="PoCket" class="hero-logo" />
         </div>
       </div>
     </section>
 
-    <!-- 인기 강의 -->
+    <!-- 인기 테스트베드 -->
     <section class="popular-section">
       <div class="section-inner">
         <div class="section-header">
-          <h2 class="section-title">인기 강의</h2>
+          <h2 class="section-title">인기 테스트베드</h2>
           <router-link to="/login" class="section-link">전체 보기 →</router-link>
         </div>
         <div class="course-grid">
-          <div v-for="course in featuredCourses" :key="course.id" class="course-card-landing">
-            <div class="card-thumb" :class="course.thumbBg">
-              <img :src="course.thumbSrc" :alt="course.title" class="thumb-img" />
+          <div v-for="slot in featuredSlots" :key="slot.id" class="course-card-landing">
+            <div class="card-thumb" :style="{ background: category(slot.category).tint }">
+              <span class="thumb-icon" aria-hidden="true">{{ category(slot.category).icon }}</span>
             </div>
             <div class="card-body">
-              <span class="badge" :class="course.badgeClass">{{ course.category }}</span>
-              <h3 class="card-title">{{ course.title }}</h3>
+              <span class="badge" :style="categoryStyle(slot.category)">{{ categoryLabel(slot.category) }}</span>
+              <h3 class="card-title">{{ slot.title }}</h3>
               <div class="card-meta">
-                <span class="instructor">{{ course.instructor }}</span>
-                <span class="price">{{ course.price }}</span>
+                <span class="instructor">{{ slot.host }}</span>
+                <span class="price">₩{{ formatFee(slot.price) }}</span>
               </div>
             </div>
           </div>
@@ -53,7 +54,7 @@
     <!-- 특징 섹션 -->
     <section class="features-section">
       <div class="section-inner">
-        <h2 class="section-title center">왜 LearnNexus인가요?</h2>
+        <h2 class="section-title center">왜 PoCket인가요?</h2>
         <div class="features-grid">
           <div v-for="f in features" :key="f.title" class="feature-card">
             <div class="feature-icon">{{ f.icon }}</div>
@@ -68,7 +69,7 @@
     <section class="cta-section">
       <div class="cta-inner">
         <h2>지금 바로 시작하세요</h2>
-        <p>수천 명의 개발자들이 LearnNexus와 함께 성장하고 있습니다.</p>
+        <p>수백 곳의 현장과 스타트업이 PoCket에서 실증을 연결하고 있습니다.</p>
         <router-link to="/login" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
       </div>
     </section>
@@ -77,10 +78,10 @@
     <footer class="footer">
       <div class="footer-inner">
         <div class="footer-logo">
-          <img src="@/assets/images/logo/main_logo.png" alt="LearnNexus" />
-          <span>LearnNexus</span>
+          <img src="@/assets/images/logo/pocket-symbol-inverse.svg" alt="PoCket" />
+          <span>PoCket</span>
         </div>
-        <p class="footer-copy">© 2026 LearnNexus. All rights reserved.</p>
+        <p class="footer-copy">© 2026 PoCket. All rights reserved.</p>
       </div>
     </footer>
   </div>
@@ -88,28 +89,24 @@
 
 <script setup>
 import AppHeader from '@/components/AppHeader.vue'
+import SplitPortal from '@/components/SplitPortal.vue'
+import { category, categoryLabel, categoryStyle, formatFee } from '@/domain/pocket.js'
 
-import springImg   from '@/assets/images/courses/spring_boot.png'
-import vueImg      from '@/assets/images/courses/vue_js.png'
-import k8sImg      from '@/assets/images/courses/kubernetes.png'
-import dockerImg   from '@/assets/images/courses/docker.png'
-import pythonImg   from '@/assets/images/courses/python.png'
-import genaiImg    from '@/assets/images/courses/generative_ai.png'
-
-const featuredCourses = [
-  { id:1, title:'Spring Boot MSA 완성', category:'백엔드',    instructor:'김강사', price:'₩89,000', thumbSrc: springImg, thumbBg:'thumb-teal',   badgeClass:'badge-teal'   },
-  { id:2, title:'Vue 3 실전 프로젝트',  category:'프론트엔드', instructor:'이강사', price:'₩69,000', thumbSrc: vueImg,    thumbBg:'thumb-teal',   badgeClass:'badge-teal'   },
-  { id:3, title:'Kubernetes 운영 가이드',category:'DevOps',   instructor:'박강사', price:'₩99,000', thumbSrc: k8sImg,    thumbBg:'thumb-blue',   badgeClass:'badge-blue'   },
-  { id:4, title:'Docker 컨테이너 실전', category:'DevOps',    instructor:'정강사', price:'₩79,000', thumbSrc: dockerImg, thumbBg:'thumb-blue',   badgeClass:'badge-blue'   },
-  { id:5, title:'Python 데이터 분석',   category:'데이터',    instructor:'최강사', price:'₩59,000', thumbSrc: pythonImg, thumbBg:'thumb-purple', badgeClass:'badge-purple' },
-  { id:6, title:'Generative AI 실전',   category:'AI',        instructor:'한강사', price:'₩75,000', thumbSrc: genaiImg,  thumbBg:'thumb-pink',   badgeClass:'badge-pink'   },
+// 랜딩 전용 예시 데이터 (API 미연동 — 로그인 전에도 보여주는 소개용 카드)
+const featuredSlots = [
+  { id:1, title:'강남 직영 카페 · 무인 주문 로봇 실증',   category:'BACKEND',      host:'브루잉랩',      price:1200000 },
+  { id:2, title:'대형 마트 3개점 · 스마트 선반 실증',      category:'FRONTEND',     host:'리테일파트너스', price:2400000 },
+  { id:3, title:'수도권 물류센터 · 자율주행 AGV 실증',     category:'DEVOPS',       host:'한성로지스',    price:5600000 },
+  { id:4, title:'종합병원 외래 · 문진 AI 실증',            category:'DATA_SCIENCE', host:'미래의료원',    price:4800000 },
+  { id:5, title:'강남 오피스 12층 · 스마트 회의실 실증',   category:'MOBILE',       host:'워크스페이스K', price:1800000 },
+  { id:6, title:'IDC 상면 · 발열 예측 센서 실증',          category:'DATABASE',     host:'클라우드센터',  price:3200000 },
 ]
 
 const features = [
-  { icon:'🚀', title:'실무 중심 커리큘럼', desc:'현업 전문가가 직접 설계한 실무 중심 강의로 빠르게 성장하세요.' },
-  { icon:'🎯', title:'맞춤 강의 추천', desc:'AI 기반 추천 시스템이 수강 이력을 분석해 딱 맞는 강의를 추천합니다.' },
-  { icon:'💳', title:'간편한 수강 신청', desc:'원클릭 결제와 즉시 수강으로 학습을 바로 시작하세요.' },
-  { icon:'📱', title:'언제 어디서나', desc:'PC, 태블릿, 모바일 어디서든 끊김 없이 학습하세요.' },
+  { icon:'🎯', title:'AI 테스트베드 매칭', desc:'제품 카테고리와 실증 이력을 분석해 맞는 현장을 추천합니다.' },
+  { icon:'🏢', title:'검증된 실제 현장', desc:'카페·물류센터·병원 등 운영 중인 현장이 직접 슬롯을 등록합니다.' },
+  { icon:'📝', title:'신청부터 확정까지', desc:'신청·승인·결제를 한 흐름으로 처리해 실증 준비 기간을 줄입니다.' },
+  { icon:'⭐', title:'상호 평가 기반 신뢰', desc:'실증이 끝나면 호스트와 스타트업이 서로 평가해 다음 매칭의 근거가 됩니다.' },
 ]
 </script>
 
@@ -118,7 +115,7 @@ const features = [
 
 /* 히어로 */
 .hero {
-  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 50%, #f0f9ff 100%);
+  background: var(--gradient-brand-wash);
   border-bottom: 1px solid var(--color-border);
   padding: 80px 0 64px;
 }
@@ -178,11 +175,11 @@ const features = [
   width: 200px;
   height: 200px;
   object-fit: contain;
-  border-radius: 24px;
+  border-radius: 50px;
   box-shadow: var(--shadow-lg);
 }
 
-/* 강의 섹션 */
+/* 슬롯 섹션 */
 .popular-section { padding: 64px 0; }
 .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 .section-header {
@@ -223,8 +220,9 @@ const features = [
 .thumb-blue   { background: #E6F1FB; }
 .thumb-purple { background: #EEEDFE; }
 .thumb-pink   { background: #FBEAF0; }
-.thumb-img { width: 100%; height: 100%; object-fit: contain; padding: 14px; }
+.thumb-icon { font-size: 40px; line-height: 1; }
 .card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.card-body .badge { align-self: flex-start; }
 .card-title { font-size: 14px; font-weight: 600; color: var(--color-text-primary); line-height: 1.4; }
 .card-meta { display: flex; justify-content: space-between; align-items: center; }
 .instructor { font-size: 12px; color: var(--color-text-secondary); }
@@ -265,7 +263,7 @@ const features = [
   border-color: #fff;
   font-weight: 600;
 }
-.cta-inner .btn-primary:hover { background: #f0f7ff; }
+.cta-inner .btn-primary:hover { background: var(--color-primary-light); }
 
 /* 푸터 */
 .footer {
@@ -288,6 +286,6 @@ const features = [
   font-size: 15px;
   font-weight: 600;
 }
-.footer-logo img { width: 28px; height: 28px; border-radius: 6px; }
+.footer-logo img { width: 28px; height: 28px; }
 .footer-copy { font-size: 13px; color: rgba(255,255,255,0.5); }
 </style>

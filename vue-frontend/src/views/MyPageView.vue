@@ -6,16 +6,24 @@
         <div class="sidebar-section">
           <div class="sidebar-label">메뉴</div>
 
-          <router-link to="/courses" class="sidebar-item">
-            <span class="si-icon">📚</span> 강의 목록
+          <router-link to="/testbeds" class="sidebar-item">
+            <span class="si-icon">🧭</span> 테스트베드 탐색
           </router-link>
 
           <router-link
-            v-if="!isInstructor"
-            to="/enrollments"
+            v-if="host"
+            to="/testbeds/new"
             class="sidebar-item"
           >
-            <span class="si-icon">✅</span> 내 수강 목록
+            <span class="si-icon">➕</span> 실증 슬롯 등록
+          </router-link>
+
+          <router-link
+            v-if="!host"
+            to="/applications"
+            class="sidebar-item"
+          >
+            <span class="si-icon">✅</span> 내 실증 신청
           </router-link>
 
           <router-link to="/mypage" class="sidebar-item active">
@@ -38,15 +46,15 @@
           <div class="profile-info">
             <h2 class="profile-name">{{ auth.user?.name || '사용자' }}</h2>
             <p class="profile-email">{{ auth.user?.email || '-' }}</p>
-            <span class="badge" :class="isInstructor ? 'badge-amber' : 'badge-blue'">
-              {{ isInstructor ? '강사' : '학생' }}
+            <span class="badge" :class="host ? 'badge-amber' : 'badge-blue'">
+              {{ roleLabel(auth.user?.role) }}
             </span>
           </div>
         </div>
 
-        <!-- 학생 화면 -->
-        <section v-if="!isInstructor" class="recommend-section">
-          <h3 class="section-title">추천 강의</h3>
+        <!-- 스타트업 화면 -->
+        <section v-if="!host" class="recommend-section">
+          <h3 class="section-title">AI 추천 테스트베드</h3>
 
           <p v-if="recommendMessage" class="recommend-message">
             {{ recommendMessage }}
@@ -71,25 +79,25 @@
           </p>
 
           <p v-else class="empty-text">
-            아직 추천할 강의가 없습니다.
+            아직 추천할 테스트베드가 없습니다.
           </p>
         </section>
 
-        <!-- 강사 화면 -->
+        <!-- 호스트 화면 -->
         <section v-else class="instructor-section">
           <div class="section-head">
-            <h3 class="section-title">내가 등록한 강좌</h3>
-            <span class="section-subtitle">등록한 강좌와 강좌별 수강생 수를 확인할 수 있습니다.</span>
+            <h3 class="section-title">내가 등록한 실증 슬롯</h3>
+            <span class="section-subtitle">등록한 슬롯과 슬롯별 실증 진행 건수를 확인할 수 있습니다.</span>
           </div>
 
           <div class="summary-cards">
             <div class="summary-card">
-              <div class="summary-label">등록 강좌 수</div>
+              <div class="summary-label">등록 슬롯 수</div>
               <div class="summary-value">{{ myCourses.length }}</div>
             </div>
             <div class="summary-card">
-              <div class="summary-label">총 수강생 수</div>
-              <div class="summary-value">{{ totalEnrollmentCount }}</div>
+              <div class="summary-label">총 실증 진행</div>
+              <div class="summary-value">{{ totalRunCount }}</div>
             </div>
           </div>
 
@@ -118,34 +126,34 @@
                   class="status-badge"
                   :class="course.status === 'ACTIVE' ? 'status-active' : 'status-inactive'"
                 >
-                  {{ course.status || 'UNKNOWN' }}
+                  {{ courseStatus(course.status).label }}
                 </span>
               </div>
 
               <div class="course-meta-grid">
                 <div class="meta-box">
-                  <div class="meta-label">카테고리</div>
-                  <div class="meta-value">{{ course.category || '-' }}</div>
+                  <div class="meta-label">산업군</div>
+                  <div class="meta-value">{{ categoryLabel(course.category) }}</div>
                 </div>
                 <div class="meta-box">
-                  <div class="meta-label">가격</div>
+                  <div class="meta-label">실증비</div>
                   <div class="meta-value">{{ formatPrice(course.price) }}</div>
                 </div>
                 <div class="meta-box">
-                  <div class="meta-label">수강생 수</div>
+                  <div class="meta-label">실증 진행</div>
                   <div class="meta-value">
-                    {{ course.enrollment_count ?? course.enrollmentCount ?? 0 }}명
+                    {{ course.enrollment_count ?? course.enrollmentCount ?? 0 }}건
                   </div>
                 </div>
                 <div class="meta-box">
-                  <div class="meta-label">강좌 ID</div>
+                  <div class="meta-label">슬롯 ID</div>
                   <div class="meta-value">#{{ course.id }}</div>
                 </div>
               </div>
 
               <div class="course-card-actions">
-                <router-link :to="`/courses/${course.id}`" class="action-btn action-primary">
-                  강좌 보기
+                <router-link :to="`/testbeds/${course.id}`" class="action-btn action-primary">
+                  슬롯 보기
                 </router-link>
               </div>
             </div>
@@ -156,7 +164,7 @@
           </p>
 
           <p v-else class="empty-text">
-            아직 등록한 강좌가 없습니다.
+            아직 등록한 실증 슬롯이 없습니다.
           </p>
         </section>
       </main>
@@ -172,24 +180,31 @@ import CourseCard from '@/components/CourseCard.vue'
 import { useAuthStore } from '@/store/auth.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
+import {
+  categoryLabel,
+  courseStatus,
+  isHost,
+  roleLabel,
+  recommendMessage as buildRecommendMessage
+} from '@/domain/pocket.js'
 
 const router = useRouter()
 const auth = useAuthStore()
 
-const isInstructor = computed(() => auth.user?.role === 'INSTRUCTOR')
+const host = computed(() => isHost(auth.user?.role))
 
-/* 학생용 */
+/* 스타트업용 */
 const recommendations = ref([])
 const recommendLoading = ref(true)
 const recommendError = ref('')
 const recommendMessage = ref('')
 
-/* 강사용 */
+/* 호스트용 */
 const myCourses = ref([])
 const instructorLoading = ref(true)
 const instructorError = ref('')
 
-const totalEnrollmentCount = computed(() =>
+const totalRunCount = computed(() =>
   myCourses.value.reduce((sum, course) => {
     const count = Number(course.enrollment_count ?? course.enrollmentCount ?? 0)
     return sum + (Number.isNaN(count) ? 0 : count)
@@ -208,7 +223,7 @@ function formatPrice(price) {
 }
 
 /**
- * course 객체에서 강사 식별자 추출
+ * course 객체에서 호스트 식별자 추출
  */
 function getCourseInstructorId(course) {
   return (
@@ -225,13 +240,13 @@ async function loadStudentRecommendations() {
   try {
     if (!auth.user) {
       console.warn('[MyPage] auth.user is missing')
-      recommendError.value = '추천 강의를 준비 중입니다.'
+      recommendError.value = '추천 테스트베드를 준비 중입니다.'
       return
     }
 
     if (!auth.user.id) {
       console.warn('[MyPage] auth.user.id is missing:', auth.user)
-      recommendError.value = '추천 강의를 준비 중입니다.'
+      recommendError.value = '추천 테스트베드를 준비 중입니다.'
       return
     }
 
@@ -240,12 +255,14 @@ async function loadStudentRecommendations() {
 
     const payload = res.data
 
+    // 백엔드 message 는 "BACKEND 카테고리 기반 추천 강의입니다" 처럼 enum 원시값과
+    // 교육 용어가 섞여 있으므로 쓰지 않는다. 같이 오는 basedOnCategory 로 다시 만든다.
     if (Array.isArray(payload?.recommendedCourses)) {
       recommendations.value = payload.recommendedCourses
-      recommendMessage.value = payload.message ?? ''
+      recommendMessage.value = buildRecommendMessage(payload.basedOnCategory)
     } else if (Array.isArray(payload?.data)) {
       recommendations.value = payload.data
-      recommendMessage.value = payload.message ?? ''
+      recommendMessage.value = buildRecommendMessage(payload.basedOnCategory)
     } else if (Array.isArray(payload)) {
       recommendations.value = payload
       recommendMessage.value = ''
@@ -256,7 +273,7 @@ async function loadStudentRecommendations() {
     }
   } catch (error) {
     console.error('[MyPage] failed to load recommendations:', error)
-    recommendError.value = '현재 추천 강의를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+    recommendError.value = '현재 추천 테스트베드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
   } finally {
     recommendLoading.value = false
   }
@@ -266,13 +283,13 @@ async function loadInstructorCourses() {
   try {
     if (!auth.user) {
       console.warn('[MyPage] instructor auth.user is missing')
-      instructorError.value = '강좌 정보를 불러오지 못했습니다.'
+      instructorError.value = '실증 슬롯 정보를 불러오지 못했습니다.'
       return
     }
 
     if (!auth.user.id) {
       console.warn('[MyPage] instructor auth.user.id is missing:', auth.user)
-      instructorError.value = '강좌 정보를 불러오지 못했습니다.'
+      instructorError.value = '실증 슬롯 정보를 불러오지 못했습니다.'
       return
     }
 
@@ -315,14 +332,14 @@ async function loadInstructorCourses() {
     console.log('[MyPage] filtered myCourses =', myCourses.value)
   } catch (error) {
     console.error('[MyPage] failed to load instructor courses:', error)
-    instructorError.value = '현재 강좌 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+    instructorError.value = '현재 실증 슬롯 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
   } finally {
     instructorLoading.value = false
   }
 }
 
 onMounted(async () => {
-  if (isInstructor.value) {
+  if (host.value) {
     recommendLoading.value = false
     await loadInstructorCourses()
   } else {

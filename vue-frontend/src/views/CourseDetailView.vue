@@ -7,22 +7,22 @@
         <div class="detail-hero-inner">
           <!-- 좌측 상세 정보 -->
           <div class="detail-info fade-in-up">
-            <span class="badge" :class="badgeClass">{{ displayCategory }}</span>
+            <span class="badge" :style="categoryStyle(course.category)">{{ displayCategory }}</span>
             <h1 class="detail-title">{{ course.title }}</h1>
             <p class="detail-desc">
-              {{ course.description || '실무 전문가가 직접 설계한 커리큘럼으로 체계적으로 학습하세요.' }}
+              {{ course.description || '현장 환경 스펙이 아직 등록되지 않았습니다. 호스트에게 문의해 주세요.' }}
             </p>
 
             <div class="detail-meta">
-              <span>강사: {{ displayInstructorName }}</span>
-              <span>수강생: {{ displayEnrollmentCount }}명</span>
+              <span>호스트: {{ displayHostName }}</span>
+              <span>실증 진행: {{ displayRunCount }}건</span>
             </div>
           </div>
 
-          <!-- 우측 결제/수강 카드 -->
+          <!-- 우측 결제/신청 카드 -->
           <div class="enroll-card fade-in">
-            <div class="enroll-thumb" :class="thumbBg">
-              <img v-if="thumbSrc" :src="thumbSrc" :alt="course.title" />
+            <div class="enroll-thumb" :style="{ background: cat.tint }">
+              <span class="enroll-thumb-icon" aria-hidden="true">{{ cat.icon }}</span>
             </div>
 
             <div class="enroll-body">
@@ -45,9 +45,9 @@
               </p>
 
               <ul class="enroll-info-list">
-                <li>✅ 즉시 수강 가능</li>
-                <li>✅ 평생 소장</li>
-                <li>✅ 수료증 발급</li>
+                <li>✅ 실증비 결제 시 실증 확정</li>
+                <li>✅ 확정 후 현장 상세 정보 공개</li>
+                <li>✅ 실증 종료 후 상호 평가</li>
               </ul>
             </div>
           </div>
@@ -60,7 +60,7 @@
     </div>
 
     <div v-else class="loading-center">
-      <p class="empty-text">강의 정보를 불러오지 못했습니다.</p>
+      <p class="empty-text">실증 슬롯 정보를 불러오지 못했습니다.</p>
     </div>
   </div>
 </template>
@@ -72,6 +72,7 @@ import AppHeader from '@/components/AppHeader.vue'
 import { useCourseStore } from '@/store/course.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { useAuthStore } from '@/store/auth.js'
+import { category, categoryStyle, isHost, formatFee, apiErrorMessage } from '@/domain/pocket.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -84,90 +85,60 @@ const enrollmentStatus = ref('NONE') // NONE | PENDING | ACTIVE
 
 const course = computed(() => courseStore.selectedCourse)
 const loading = computed(() => courseStore.loading)
-const isInstructor = computed(() => auth.user?.role === 'INSTRUCTOR')
+const host = computed(() => isHost(auth.user?.role))
 
-const categoryConfig = {
-  '백엔드': { badge: 'badge-teal', bg: 'thumb-teal', thumb: 'spring_boot' },
-  '프론트엔드': { badge: 'badge-teal', bg: 'thumb-teal', thumb: 'vue_js' },
-  'DevOps': { badge: 'badge-blue', bg: 'thumb-blue', thumb: 'kubernetes' },
-  '데이터': { badge: 'badge-purple', bg: 'thumb-purple', thumb: 'python' },
-  'AI': { badge: 'badge-pink', bg: 'thumb-pink', thumb: 'generative_ai' },
-}
+const cat = computed(() => category(course.value?.category))
+const displayCategory = computed(() => cat.value.label)
 
-const config = computed(() => categoryConfig[course.value?.category] || {})
-const badgeClass = computed(() => config.value.badge || 'badge-gray')
-const thumbBg = computed(() => config.value.bg || 'thumb-gray')
-
-const displayCategory = computed(() => course.value?.category || '-')
-
-const displayInstructorName = computed(() => {
+const displayHostName = computed(() => {
   return (
     course.value?.instructorName ||
     course.value?.teacherName ||
     course.value?.instructor?.name ||
     course.value?.instructor_name ||
     course.value?.ownerName ||
-    '강사 정보 없음'
+    '호스트 미상'
   )
 })
 
-const displayEnrollmentCount = computed(() => {
-  const value = Number(
-    course.value?.enrollmentCount ??
-    course.value?.enrollment_count ??
-    0
-  )
-  return Number.isNaN(value) ? 0 : value.toLocaleString()
-})
+const displayRunCount = computed(() =>
+  Number(course.value?.enrollmentCount ?? course.value?.enrollment_count ?? 0).toLocaleString()
+)
 
-const displayPrice = computed(() => {
-  const value = Number(course.value?.price ?? 0)
-  return Number.isNaN(value) ? '0' : value.toLocaleString()
-})
-
-const thumbSrc = computed(() => {
-  const key = course.value?.thumbnail || config.value.thumb
-  if (!key) return null
-
-  try {
-    return new URL(`../assets/images/courses/${key}.png`, import.meta.url).href
-  } catch {
-    return null
-  }
-})
+const displayPrice = computed(() => formatFee(course.value?.price))
 
 const buttonLabel = computed(() => {
-  if (isInstructor.value) return '강사 계정은 신청 불가'
-  if (enrollmentStatus.value === 'ACTIVE') return '내 수강 목록으로 이동'
-  if (enrollmentStatus.value === 'PENDING') return '신청 완료 · 결제 처리 중'
-  return '결제하고 수강하기'
+  if (host.value) return '호스트 계정은 신청 불가'
+  if (enrollmentStatus.value === 'ACTIVE') return '내 실증 목록으로 이동'
+  if (enrollmentStatus.value === 'PENDING') return '신청 완료 · 승인 대기 중'
+  return '실증비 결제하고 신청하기'
 })
 
 const buttonDisabled = computed(() => {
   if (enrolling.value) return true
-  if (isInstructor.value) return true
+  if (host.value) return true
   if (enrollmentStatus.value === 'PENDING') return true
   return false
 })
 
 const helperText = computed(() => {
-  if (isInstructor.value) {
-    return '강사 계정은 본인 강의를 수강 신청할 수 없습니다.'
+  if (host.value) {
+    return '호스트 계정은 실증 슬롯을 신청할 수 없습니다.'
   }
 
   if (enrollmentStatus.value === 'ACTIVE') {
-    return '이미 수강 중인 강의입니다. 내 수강 목록에서 바로 이어서 학습할 수 있습니다.'
+    return '이미 확정된 실증입니다. 내 실증 목록에서 진행 상황을 확인할 수 있습니다.'
   }
 
   if (enrollmentStatus.value === 'PENDING') {
-    return '수강 신청이 접수되었습니다. 결제/처리 상태가 반영되면 내 수강 목록에서 확인할 수 있습니다.'
+    return '실증 신청이 접수되었습니다. 호스트 승인과 결제가 처리되면 내 실증 목록에 반영됩니다.'
   }
 
-  return '결제를 진행하면 수강 신청이 함께 처리됩니다.'
+  return '결제를 진행하면 실증 신청이 함께 접수됩니다.'
 })
 
 async function loadEnrollmentStatus() {
-  if (!auth.user?.id || !course.value?.id || isInstructor.value) {
+  if (!auth.user?.id || !course.value?.id || host.value) {
     enrollmentStatus.value = 'NONE'
     return
   }
@@ -200,17 +171,17 @@ async function handlePrimaryAction() {
   enrollError.value = ''
 
   if (!course.value?.id) {
-    enrollError.value = '강의 정보가 올바르지 않습니다.'
+    enrollError.value = '실증 슬롯 정보가 올바르지 않습니다.'
     return
   }
 
-  if (isInstructor.value) {
-    enrollError.value = '강사 계정은 본인 강의를 수강 신청할 수 없습니다.'
+  if (host.value) {
+    enrollError.value = '호스트 계정은 실증 슬롯을 신청할 수 없습니다.'
     return
   }
 
   if (enrollmentStatus.value === 'ACTIVE') {
-    router.push('/enrollments')
+    router.push('/applications')
     return
   }
 
@@ -225,7 +196,9 @@ async function handlePrimaryAction() {
     enrollmentStatus.value = 'PENDING'
   } catch (e) {
     console.error('[CourseDetail] enroll failed:', e)
-    enrollError.value = e.response?.data?.message || '결제/수강 신청에 실패했습니다.'
+    enrollError.value = apiErrorMessage(e, '실증 신청에 실패했습니다.', {
+      409: '이미 신청한 실증 슬롯입니다.'
+    })
   } finally {
     enrolling.value = false
   }
@@ -256,7 +229,7 @@ watch(
 }
 
 .detail-hero {
-  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  background: var(--gradient-brand-wash);
   border-bottom: 1px solid var(--color-border);
   padding: 48px 0;
 }
@@ -276,6 +249,8 @@ watch(
   flex-direction: column;
   gap: 14px;
 }
+
+.detail-info .badge { align-self: flex-start; }
 
 .detail-title {
   font-size: 30px;
@@ -319,6 +294,7 @@ watch(
   padding: 20px;
 }
 
+.enroll-thumb-icon { font-size: 48px; line-height: 1; }
 .thumb-teal { background: #E1F5EE; }
 .thumb-blue { background: #E6F1FB; }
 .thumb-purple { background: #EEEDFE; }

@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/store/auth.js'
+import { isHost } from '@/domain/pocket.js'
 
+// 경로도 실증 도메인으로 맞춘다. 백엔드 API 경로(/api/courses …)와는 무관한
+// 프론트 라우팅 경로이므로 자유롭게 바꿔도 된다.
 const routes = [
   {
     path: '/',
@@ -19,26 +22,26 @@ const routes = [
     component: () => import('@/views/CallbackView.vue')
   },
   {
-    path: '/courses',
-    name: 'CourseList',
+    path: '/testbeds',
+    name: 'TestbedList',
     component: () => import('@/views/CourseListView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/courses/new',
-    name: 'CourseCreate',
+    path: '/testbeds/new',
+    name: 'TestbedCreate',
     component: () => import('@/views/CourseCreateView.vue'),
-    meta: { requiresAuth: true, instructorOnly: true }
+    meta: { requiresAuth: true, hostOnly: true }
   },
   {
-    path: '/courses/:id(\\d+)',
-    name: 'CourseDetail',
+    path: '/testbeds/:id(\\d+)',
+    name: 'TestbedDetail',
     component: () => import('@/views/CourseDetailView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/enrollments',
-    name: 'Enrollment',
+    path: '/applications',
+    name: 'ApplicationList',
     component: () => import('@/views/EnrollmentView.vue'),
     meta: { requiresAuth: true }
   },
@@ -67,11 +70,12 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
-    return { name: 'CourseList' }
+    return { name: 'TestbedList' }
   }
 
-  if (to.meta.instructorOnly && auth.user?.role !== 'INSTRUCTOR') {
-    return { name: 'CourseList' }
+  // 슬롯 등록은 호스트만
+  if (to.meta.hostOnly && !isHost(auth.user?.role)) {
+    return { name: 'TestbedList' }
   }
 })
 

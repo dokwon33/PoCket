@@ -3,14 +3,14 @@
     <div class="header-inner">
       <!-- 로고 -->
       <router-link to="/" class="logo">
-        <img src="@/assets/images/logo/main_logo.png" alt="LearnNexus" class="logo-img" />
-        <span class="logo-text">LearnNexus</span>
+        <img src="@/assets/images/logo/pocket-symbol-color.svg" alt="PoCket" class="logo-img" />
+        <span class="logo-text">PoCket</span>
       </router-link>
 
       <!-- 네비게이션 -->
       <nav class="nav-links" v-if="auth.isAuthenticated">
-        <router-link to="/courses" class="nav-link" :class="{ active: $route.path.startsWith('/courses') }">강의</router-link>
-        <router-link to="/enrollments" class="nav-link" :class="{ active: $route.path === '/enrollments' }">내 학습</router-link>
+        <router-link to="/testbeds" class="nav-link" :class="{ active: $route.path.startsWith('/testbeds') }">테스트베드</router-link>
+        <router-link v-if="!host" to="/applications" class="nav-link" :class="{ active: $route.path === '/applications' }">내 실증</router-link>
       </nav>
 
       <!-- 우측 액션 -->
@@ -31,11 +31,15 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useAuthStore } from '@/store/auth.js'
 import { useRouter } from 'vue-router'
+import { isHost } from '@/domain/pocket.js'
 
 const auth = useAuthStore()
 const router = useRouter()
+
+const host = computed(() => isHost(auth.user?.role))
 
 function handleLogout() {
   auth.logout()
@@ -71,7 +75,6 @@ function handleLogout() {
   width: 36px;
   height: 36px;
   object-fit: contain;
-  border-radius: 8px;
 }
 .logo-text {
   font-size: 17px;

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258 88" width="258" height="88" role="img" aria-label="PoCket">
+  <title>PoCket horizontal lockup</title>
+  <defs>
+    <linearGradient id="pkt-lock-color" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7F77DD"/>
+      <stop offset="1" stop-color="#378ADD"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#B9B4EC" stroke-width="3">
+    <rect x="1.5" y="1.5" width="21" height="21" rx="6.5"/>
+    <rect x="33.5" y="1.5" width="21" height="21" rx="6.5"/>
+    <rect x="65.5" y="1.5" width="21" height="21" rx="6.5"/>
+    <rect x="1.5" y="33.5" width="21" height="21" rx="6.5"/>
+    <rect x="65.5" y="33.5" width="21" height="21" rx="6.5"/>
+    <rect x="1.5" y="65.5" width="21" height="21" rx="6.5"/>
+    <rect x="33.5" y="65.5" width="21" height="21" rx="6.5"/>
+    <rect x="65.5" y="65.5" width="21" height="21" rx="6.5"/>
+  </g>
+  <rect x="32" y="32" width="24" height="24" rx="8" fill="url(#pkt-lock-color)"/>
+  <text x="112" y="59.5" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="44" font-weight="500" letter-spacing="-1" fill="#3C3489">PoCket</text>
+</svg>

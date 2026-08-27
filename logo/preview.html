@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>PoCket 로고 애셋 미리보기</title>
+<style>
+  body { font-family: -apple-system, 'Helvetica Neue', 'Malgun Gothic', sans-serif; margin: 0; padding: 40px; background: #FAFAF8; color: #2C2C2A; }
+  h1 { font-size: 20px; font-weight: 500; margin: 0 0 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+  .card { background: #F1EFE8; border: 1px solid #D3D1C7; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; }
+  .card.dark { background: #2C2C2A; }
+  .card img { max-width: 180px; max-height: 100px; }
+  .label { margin-top: 20px; font-size: 13px; color: #5F5E5A; text-align: center; word-break: break-all; }
+  .card.dark .label { color: #B4B2A9; }
+  .row { display: flex; align-items: flex-end; gap: 24px; }
+  .row img { max-height: none; }
+</style>
+</head>
+<body>
+<h1>PoCket 로고 애셋</h1>
+<div class="grid">
+  <div class="card"><img src="pocket-symbol-color.svg" alt="기본 심볼"><div class="label">pocket-symbol-color.svg</div></div>
+  <div class="card"><img src="pocket-symbol-mono.svg" alt="단색 심볼"><div class="label">pocket-symbol-mono.svg</div></div>
+  <div class="card dark"><img src="pocket-symbol-inverse.svg" alt="반전 심볼"><div class="label">pocket-symbol-inverse.svg</div></div>
+  <div class="card"><img src="pocket-app-icon-1024.svg" alt="앱 아이콘"><div class="label">pocket-app-icon-1024.svg</div></div>
+  <div class="card"><img src="pocket-lockup-horizontal-color.svg" alt="가로형 조합"><div class="label">pocket-lockup-horizontal-color.svg</div></div>
+  <div class="card"><img src="pocket-lockup-horizontal-mono.svg" alt="가로형 조합 단색"><div class="label">pocket-lockup-horizontal-mono.svg</div></div>
+  <div class="card">
+    <div class="row">
+      <img src="pocket-favicon-16.svg" width="16" height="16" alt="16px">
+      <img src="pocket-favicon-32.svg" width="32" height="32" alt="32px">
+      <img src="pocket-symbol-color.svg" width="48" height="48" alt="48px">
+      <img src="pocket-symbol-color.svg" width="64" height="64" alt="64px">
+    </div>
+    <div class="label">16 / 32 / 48 / 64px 실제 크기</div>
+  </div>
+</div>
+</body>
+</html>
