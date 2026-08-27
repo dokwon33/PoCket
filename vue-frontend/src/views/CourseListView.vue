@@ -208,7 +208,7 @@ onMounted(() => {
 }
 
 .filter-chip:hover {
-  color: var(--color-primary);
+  color: var(--color-link);
   transform: translateY(-1px);
   box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-md);
 }

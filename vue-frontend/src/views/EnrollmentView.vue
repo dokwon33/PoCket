@@ -325,7 +325,7 @@ onMounted(load)
   padding: 0;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-link);
   cursor: pointer;
   text-decoration: underline;
   font-family: var(--font-sans);

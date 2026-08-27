@@ -37,7 +37,16 @@
           <router-link to="/testbeds" class="section-link">전체 보기 →</router-link>
         </div>
         <div class="course-grid">
-          <div v-for="slot in featuredSlots" :key="slot.id" class="course-card-landing">
+          <!-- 카드가 hover 로 떠오르니 누를 수 있다고 읽힌다. 실제로 누르면
+               로그인 상태에서는 슬롯 상세로, 아니면 로그인을 거쳐 그리로 간다. -->
+          <component
+            :is="linkable ? 'router-link' : 'a'"
+            v-for="slot in featuredSlots"
+            :key="slot.id"
+            :to="linkable ? `/testbeds/${slot.id}` : undefined"
+            :href="linkable ? undefined : '/login?redirect=/testbeds'"
+            class="course-card-landing"
+          >
             <div class="card-thumb">
               <SlotThumb :course="slot" :icon-size="42" />
             </div>
@@ -49,7 +58,7 @@
                 <span class="price">₩{{ formatFee(slot.price) }}</span>
               </div>
             </div>
-          </div>
+          </component>
         </div>
       </div>
     </section>
@@ -120,6 +129,9 @@ const SAMPLE_SLOTS = [
 
 const featuredSlots = ref(SAMPLE_SLOTS)
 
+/* 샘플 카드의 id 는 실제 슬롯이 아니다. 진짜 목록으로 교체된 뒤에만 상세로 보낸다. */
+const linkable = ref(false)
+
 onMounted(async () => {
   // 익명이면 요청하지 않는다 — 401 인터셉터가 "세션 만료"로 오인해 토큰을 마크한다
   if (!useAuthStore().accessToken) return
@@ -134,6 +146,7 @@ onMounted(async () => {
       .sort((a, b) => (b.enrollmentCount ?? 0) - (a.enrollmentCount ?? 0))
       .slice(0, 6)
 
+    linkable.value = true
     await primeHosts(featuredSlots.value)
   } catch (e) {
     console.warn('[PoCket] 인기 테스트베드 조회 실패 — 소개용 카드를 유지한다:', e?.response?.status)
@@ -183,7 +196,7 @@ const features = [
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
-  color: var(--color-primary);
+  color: var(--color-link);
   border-radius: var(--radius-pill);
   font-size: 12.5px;
   font-weight: 700;
@@ -302,7 +315,7 @@ const features = [
 }
 .section-title { font-size: 28px; font-weight: 700; letter-spacing: -0.04em; color: var(--color-text-primary); }
 .section-title.center { text-align: center; margin-bottom: 40px; }
-.section-link { font-size: 14px; color: var(--color-primary); font-weight: 500; }
+.section-link { font-size: 14px; color: var(--color-link); font-weight: 500; }
 .section-link:hover { text-decoration: underline; }
 
 .course-grid {
@@ -312,6 +325,7 @@ const features = [
   gap: 16px;
 }
 .course-card-landing {
+  display: block;
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
@@ -393,7 +407,7 @@ const features = [
   display: flex;
   justify-content: center;
   margin-bottom: 18px;
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 .feature-title { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 10px; }
 .feature-desc { font-size: 13.5px; color: var(--color-text-secondary); line-height: 1.68; }
@@ -409,7 +423,7 @@ const features = [
 .cta-inner p { font-size: 17px; color: rgba(255,255,255,0.82); margin-bottom: 36px; line-height: 1.7; }
 .cta-inner .btn-primary {
   background: #fff;
-  color: var(--color-primary);
+  color: var(--color-link);
   border-color: #fff;
   font-weight: 700;
   box-shadow: 0 10px 30px rgba(0,0,0,0.18);

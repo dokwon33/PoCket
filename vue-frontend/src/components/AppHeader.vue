@@ -111,7 +111,7 @@ function handleLogout() {
 }
 .nav-link:hover,
 .nav-link.active {
-  color: var(--color-primary);
+  color: var(--color-link);
   background: var(--color-primary-light);
 }
 .header-actions {
@@ -130,7 +130,7 @@ function handleLogout() {
   height: 36px;
   border-radius: 50%;
   background: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-link);
   font-size: 13px;
   font-weight: 600;
   display: flex;

@@ -539,7 +539,7 @@ onMounted(async () => {
   margin-top: 8px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 .review-slot:hover { text-decoration: underline; }
 .review-reply {
@@ -613,7 +613,7 @@ onMounted(async () => {
   height: 64px;
   border-radius: 50%;
   background: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-link);
   font-size: 24px;
   font-weight: 700;
   display: flex;

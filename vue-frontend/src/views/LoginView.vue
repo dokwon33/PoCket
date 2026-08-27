@@ -285,7 +285,7 @@ async function handleRegister() {
   margin-bottom: 32px;
   transition: var(--transition);
 }
-.back-link:hover { color: var(--color-primary); }
+.back-link:hover { color: var(--color-link); }
 
 .section { display: flex; flex-direction: column; gap: 16px; }
 .section-title { font-size: 22px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 4px; }
@@ -332,7 +332,7 @@ async function handleRegister() {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .text-link {
-  color: var(--color-primary);
+  color: var(--color-link);
   font-weight: 600;
   text-decoration: underline;
 }
@@ -346,7 +346,7 @@ async function handleRegister() {
 .text-btn {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-link);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
