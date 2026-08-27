@@ -37,19 +37,47 @@ export const useAuthStore = defineStore('auth', () => {
       setUser(userData)
     } catch (error) {
       console.error('[AuthStore] 사용자 정보 조회 실패:', error)
-      logout(false)
+      clearLocal()
     }
   }
 
-  function logout(redirect = true) {
+  function clearLocal() {
     accessToken.value = null
     user.value = null
     sessionStorage.removeItem('access_token')
     sessionStorage.removeItem('user')
+  }
 
-    if (redirect) {
-      window.location.href = '/login'
+  /**
+   * 로그아웃
+   *
+   * 토큰만 지우면 로그아웃이 되지 않는다. 인증 서버의 세션 쿠키가 살아 있어서
+   * 다시 로그인을 누르면 서버가 조용히 통과시켜 같은 계정으로 되돌아온다.
+   * (localhost 쿠키는 포트를 구분하지 않으므로 :8080 과 :9000 이 같은 세션을 쓴다)
+   *
+   * 그래서 서버 세션까지 끊는다.
+   *
+   * @param full  true  = 서버 세션까지 끊고 홈으로 (사용자가 로그아웃 버튼을 누른 경우)
+   *              false = 로컬 토큰만 정리 (401 로 만료를 감지한 경우)
+   */
+  async function logout(full = true) {
+    clearLocal()
+    if (!full) return
+
+    try {
+      // no-cors 라 응답은 못 읽지만 Set-Cookie 는 적용된다.
+      // 전체 화면을 인증 서버로 넘기면 스프링 기본 로그아웃 페이지에 착지하게 되므로 쓰지 않는다.
+      await fetch(`${AUTH_SERVER_URL}/logout`, {
+        method: 'GET',
+        credentials: 'include',
+        mode: 'no-cors'
+      })
+    } catch (e) {
+      console.warn('[AuthStore] 인증 서버 로그아웃 요청 실패:', e)
     }
+
+    // '/login' 으로 보내면 자동 이동이 걸려 도로 로그인된다. 반드시 홈으로.
+    window.location.href = '/'
   }
 
   // OAuth2 Authorization Code Flow

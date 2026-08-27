@@ -221,7 +221,6 @@ const totalRunCount = computed(() =>
 
 function handleLogout() {
   auth.logout()
-  router.push('/')
 }
 
 function formatPrice(price) {

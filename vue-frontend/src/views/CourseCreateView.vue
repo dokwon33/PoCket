@@ -161,7 +161,6 @@ const categoryOptions = CATEGORIES.map(({ code, label }) => ({ value: code, labe
 
 function handleLogout() {
   auth.logout()
-  router.push('/')
 }
 
 function validateForm() {

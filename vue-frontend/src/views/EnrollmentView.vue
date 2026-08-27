@@ -107,7 +107,6 @@ const host = computed(() => isHost(auth.user?.role))
 
 function handleLogout() {
   auth.logout()
-  router.push('/')
 }
 
 onMounted(async () => {

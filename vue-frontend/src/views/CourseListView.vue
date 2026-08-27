@@ -162,7 +162,6 @@ function selectCategory(code) {
 
 function handleLogout() {
   auth.logout()
-  router.push('/')
 }
 
 onMounted(() => {

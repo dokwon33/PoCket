@@ -11,7 +11,7 @@
           <h1 class="hero-title">제품을 검증할 현장,<br>더 빠르게 찾으세요</h1>
           <p class="hero-desc">카페·물류센터·병원 등 실제 현장이 등록한 실증 슬롯을 AI가 우리 제품에 맞춰 추천합니다.</p>
           <div class="hero-actions">
-            <router-link to="/login" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
+            <router-link to="/register" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
             <router-link to="/testbeds" class="btn btn-outline btn-lg">테스트베드 둘러보기</router-link>
           </div>
           <div class="hero-stats">
@@ -34,7 +34,7 @@
       <div class="section-inner">
         <div class="section-header">
           <h2 class="section-title">인기 테스트베드</h2>
-          <router-link to="/login" class="section-link">전체 보기 →</router-link>
+          <router-link to="/testbeds" class="section-link">전체 보기 →</router-link>
         </div>
         <div class="course-grid">
           <div v-for="slot in featuredSlots" :key="slot.id" class="course-card-landing">
@@ -73,7 +73,7 @@
       <div class="cta-inner">
         <h2>지금 바로 시작하세요</h2>
         <p>수백 곳의 현장과 스타트업이 PoCket에서 실증을 연결하고 있습니다.</p>
-        <router-link to="/login" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
+        <router-link to="/register" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
       </div>
     </section>
 
