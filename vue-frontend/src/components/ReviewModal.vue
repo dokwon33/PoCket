@@ -1,6 +1,5 @@
 <template>
-  <div class="overlay" @click.self="close">
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="review-title">
+  <ModalSheet :locked="saving" @close="close">
       <h3 id="review-title" class="sheet-title">
         {{ isEdit ? '평가 수정' : '실증 평가 남기기' }}
       </h3>
@@ -34,12 +33,12 @@
           <span v-else>{{ isEdit ? '수정' : '평가 남기기' }}</span>
         </button>
       </div>
-    </div>
-  </div>
+  </ModalSheet>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
+import ModalSheet from '@/components/ModalSheet.vue'
 import StarRating from '@/components/StarRating.vue'
 import { reviewApi } from '@/api/review.js'
 import { apiErrorMessage } from '@/domain/pocket.js'
@@ -104,53 +103,9 @@ async function submit() {
   }
 }
 
-function onKeydown(e) {
-  if (e.key === 'Escape') close()
-}
-onMounted(() => {
-  document.addEventListener('keydown', onKeydown)
-  document.body.style.overflow = 'hidden'
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown)
-  document.body.style.overflow = ''
-})
 </script>
 
 <style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(36, 34, 73, 0.28);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-}
-
-.sheet {
-  width: 100%;
-  max-width: 460px;
-  padding: 32px;
-  border-radius: var(--radius-xl);
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-edge);
-  box-shadow: var(--shadow-glass), 0 32px 80px rgba(36, 34, 73, 0.22);
-  animation: rise 0.24s var(--ease-out) both;
-}
-@keyframes rise {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to   { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sheet { animation: none; }
-}
-
 .sheet-title {
   font-size: 20px;
   font-weight: 700;

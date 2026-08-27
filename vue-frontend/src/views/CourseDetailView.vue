@@ -83,6 +83,16 @@
     <div v-else class="loading-center">
       <p class="empty-text">실증 슬롯 정보를 불러오지 못했습니다.</p>
     </div>
+
+    <PaymentConfirmModal
+      v-if="confirmOpen && course"
+      :slot="{ title: course.title, category: course.category, price: course.price }"
+      :host-name="displayHostName"
+      :processing="enrolling"
+      :error="enrollError"
+      @close="closeConfirm"
+      @confirm="confirmAndEnroll"
+    />
   </div>
 </template>
 
@@ -100,6 +110,7 @@ import { category, categoryStyle, courseStatus, isHost, formatFee, apiErrorMessa
 import { hostName as resolveHost } from '@/domain/hosts.js'
 import StarRating from '@/components/StarRating.vue'
 import { reviewApi } from '@/api/review.js'
+import PaymentConfirmModal from '@/components/PaymentConfirmModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -199,33 +210,43 @@ async function loadEnrollmentStatus() {
   }
 }
 
-async function handlePrimaryAction() {
+/** 신청 버튼 → 곧장 신청하지 않고 결제 확인 단계를 먼저 띄운다 */
+function handlePrimaryAction() {
   enrollError.value = ''
+
+  if (host.value) {
+    enrollError.value = '호스트 계정은 실증 슬롯을 신청할 수 없습니다.'
+    return
+  }
+  if (enrollmentStatus.value === 'ACTIVE') {
+    router.push('/applications')
+    return
+  }
+  if (enrollmentStatus.value === 'PENDING') return
 
   if (!course.value?.id) {
     enrollError.value = '실증 슬롯 정보가 올바르지 않습니다.'
     return
   }
 
-  if (host.value) {
-    enrollError.value = '호스트 계정은 실증 슬롯을 신청할 수 없습니다.'
-    return
-  }
+  confirmOpen.value = true
+}
 
-  if (enrollmentStatus.value === 'ACTIVE') {
-    router.push('/applications')
-    return
-  }
+const confirmOpen = ref(false)
 
-  if (enrollmentStatus.value === 'PENDING') {
-    return
-  }
+function closeConfirm() {
+  if (!enrolling.value) confirmOpen.value = false
+}
+
+async function confirmAndEnroll() {
+  enrollError.value = ''
 
   enrolling.value = true
 
   try {
     await enrollmentApi.enroll(course.value.id)
     enrollmentStatus.value = 'PENDING'
+    confirmOpen.value = false
   } catch (e) {
     console.error('[CourseDetail] enroll failed:', e)
     enrollError.value = apiErrorMessage(e, '실증 신청에 실패했습니다.', {

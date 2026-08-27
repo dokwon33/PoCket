@@ -55,7 +55,11 @@ const menu = computed(() => [
   { to: '/testbeds', icon: 'compass', label: '테스트베드 탐색', exact: true },
   ...(host.value
     ? [{ to: '/testbeds/new', icon: 'plus', label: '실증 슬롯 등록' }]
-    : [{ to: '/applications', icon: 'check', label: '내 실증 신청' }])
+    : [
+        { to: '/applications', icon: 'check', label: '내 실증 신청' },
+        // 결제는 신청한 쪽(스타트업)에만 남는다
+        { to: '/payments', icon: 'document', label: '결제 내역' }
+      ])
   // 마이페이지는 '계정' 섹션에 둔다 — 서비스 메뉴가 아니라 내 계정에 속한 화면이다.
 ])
 

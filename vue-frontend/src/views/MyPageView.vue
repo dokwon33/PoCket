@@ -42,6 +42,19 @@
                 {{ reviewSlots[r.courseId]?.title || `실증 슬롯 #${r.courseId}` }}
               </router-link>
               <p v-if="r.comment" class="review-comment">{{ r.comment }}</p>
+
+              <!-- 호스트는 여기서 상대 스타트업을 평가한다.
+                   슬롯별 신청자 조회 API 가 없어, 받은 평가가 유일한 상대 식별 경로다. -->
+              <div v-if="host" class="review-reply">
+                <template v-if="myReviewOf(r)">
+                  <StarRating :model-value="myReviewOf(r).rating" readonly :size="14" />
+                  <span class="reply-label">내가 남긴 평가</span>
+                  <button type="button" class="text-btn" @click="openHostReview(r)">수정</button>
+                </template>
+                <button v-else type="button" class="btn btn-primary btn-sm" @click="openHostReview(r)">
+                  이 스타트업 평가하기
+                </button>
+              </div>
             </li>
           </ul>
 
@@ -171,6 +184,14 @@
         </section>
       </main>
     </div>
+
+    <ReviewModal
+      v-if="reviewTarget"
+      :target="reviewTarget"
+      :existing="reviewExisting"
+      @close="closeHostReview"
+      @saved="onHostReviewSaved"
+    />
   </div>
 </template>
 
@@ -180,6 +201,7 @@ import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import CourseCard from '@/components/CourseCard.vue'
 import StarRating from '@/components/StarRating.vue'
+import ReviewModal from '@/components/ReviewModal.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { useAuthStore } from '@/store/auth.js'
@@ -208,6 +230,33 @@ const reviewsLoading = ref(true)
 /* 평가가 어느 슬롯에 대한 것인지 보여주려면 제목이 필요하다.
    ReviewResponse 에는 courseId 만 있으므로 슬롯을 한 번씩 조회해 채운다. */
 const reviewSlots = ref({})
+
+/* 내가(호스트가) 남긴 평가 — 답례 평가를 이미 했는지 판별한다 */
+const myWritten = ref({})
+const reviewTarget = ref(null)
+const reviewExisting = ref(null)
+
+const myReviewOf = (r) => myWritten.value[r?.enrollmentId] || null
+
+function openHostReview(r) {
+  reviewExisting.value = myReviewOf(r)
+  reviewTarget.value = {
+    enrollmentId: r.enrollmentId,
+    // 호스트가 평가할 때는 revieweeId 가 필수다. 나를 평가한 그 스타트업이 대상이다.
+    revieweeId: r.reviewerId,
+    slotTitle: reviewSlots.value[r.courseId]?.title || `실증 슬롯 #${r.courseId}`
+  }
+}
+
+function closeHostReview() {
+  reviewTarget.value = null
+  reviewExisting.value = null
+}
+
+async function onHostReviewSaved() {
+  closeHostReview()
+  await loadReviews()
+}
 
 /** 평가자 이름 — 가운데를 가려서 보여준다. 이름을 못 받아오면 역할로 대체한다. */
 function reviewerName(review) {
@@ -243,12 +292,16 @@ async function loadReviews() {
     return
   }
   try {
-    const [rep, list] = await Promise.all([
+    const [rep, list, mine] = await Promise.all([
       reviewApi.reputation(id),
-      reviewApi.receivedBy(id)
+      reviewApi.receivedBy(id),
+      reviewApi.myWritten().catch(() => null)
     ])
     reputation.value = rep.data
     received.value = Array.isArray(list.data) ? list.data : list.data?.data || []
+
+    const written = Array.isArray(mine?.data) ? mine.data : mine?.data?.data || []
+    myWritten.value = Object.fromEntries(written.map((r) => [r.enrollmentId, r]))
     await Promise.all([
       fillReviewSlots(received.value),
       primeUsers(received.value.map((r) => r.reviewerId))
@@ -478,6 +531,24 @@ onMounted(async () => {
   color: var(--color-primary);
 }
 .review-slot:hover { text-decoration: underline; }
+.review-reply {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--glass-edge);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.reply-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: var(--radius-pill);
+}
 .review-comment {
   margin-top: 10px;
   font-size: 14.5px;
