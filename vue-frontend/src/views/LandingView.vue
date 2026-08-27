@@ -51,7 +51,10 @@
               <SlotThumb :course="slot" :icon-size="42" />
             </div>
             <div class="card-body">
-              <span class="badge" :style="categoryStyle(slot.category)">{{ categoryLabel(slot.category) }}</span>
+              <div class="card-tags">
+                <span class="badge" :style="categoryStyle(slot.category)">{{ categoryLabel(slot.category) }}</span>
+                <span v-if="isMine(slot)" class="mine-tag">신청함</span>
+              </div>
               <h3 class="card-title">{{ slot.title }}</h3>
               <div class="card-meta">
                 <span class="instructor">{{ hostName(slot) }}</span>
@@ -113,6 +116,7 @@ import CountUp from '@/components/CountUp.vue'
 import SlotThumb from '@/components/SlotThumb.vue'
 import { categoryLabel, categoryStyle, formatFee } from '@/domain/pocket.js'
 import { hostName, primeHosts } from '@/domain/hosts.js'
+import { isMine, primeMyEnrollments } from '@/domain/myEnrollments.js'
 import { courseApi } from '@/api/course.js'
 import { useAuthStore } from '@/store/auth.js'
 
@@ -152,6 +156,8 @@ onMounted(async () => {
       .slice(0, 6)
 
     linkable.value = true
+    // 이미 신청한 슬롯을 미리보기에서도 구분한다
+    primeMyEnrollments()
     await primeHosts(featuredSlots.value)
   } catch (e) {
     console.warn('[PoCket] 인기 테스트베드 조회 실패 — 소개용 카드를 유지한다:', e?.response?.status)
@@ -358,7 +364,21 @@ const features = [
 .course-card-landing:hover :deep(.thumb-symbol),
 .course-card-landing:hover :deep(.thumb-photo) { transform: scale(1.06); }
 .card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; }
-.card-body .badge { align-self: flex-start; }
+.card-tags {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mine-tag {
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-light);
+  color: var(--color-link);
+  font-size: 11.5px;
+  font-weight: 700;
+}
 .card-title {
   font-size: 15.5px;
   font-weight: 700;

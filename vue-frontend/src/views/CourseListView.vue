@@ -91,6 +91,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { primeMyEnrollments } from '@/domain/myEnrollments.js'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import CourseCard from '@/components/CourseCard.vue'
@@ -124,6 +125,8 @@ function selectCategory(code) {
 
 onMounted(() => {
   courseStore.fetchCourses()
+  // 어느 슬롯을 이미 신청했는지 카드에 표시하기 위해
+  primeMyEnrollments()
 })
 </script>
 
