@@ -32,7 +32,7 @@
     <!-- 인기 테스트베드 -->
     <section class="popular-section">
       <div class="section-inner">
-        <div class="section-header">
+        <div class="section-header" v-reveal>
           <h2 class="section-title">인기 테스트베드</h2>
           <router-link to="/testbeds" class="section-link">전체 보기 →</router-link>
         </div>
@@ -41,8 +41,9 @@
                로그인 상태에서는 슬롯 상세로, 아니면 로그인을 거쳐 그리로 간다. -->
           <component
             :is="linkable ? 'router-link' : 'a'"
-            v-for="slot in featuredSlots"
+            v-for="(slot, i) in featuredSlots"
             :key="slot.id"
+            v-reveal="{ delay: Math.min(i, 5) * 60 }"
             :to="linkable ? `/testbeds/${slot.id}` : undefined"
             :href="linkable ? undefined : '/login?redirect=/testbeds'"
             class="course-card-landing"
@@ -66,9 +67,14 @@
     <!-- 특징 섹션 -->
     <section class="features-section">
       <div class="section-inner">
-        <h2 class="section-title center">왜 PoCket인가요?</h2>
+        <h2 class="section-title center" v-reveal>왜 PoCket인가요?</h2>
         <div class="features-grid">
-          <div v-for="f in features" :key="f.title" class="feature-card">
+          <div
+            v-for="(f, i) in features"
+            :key="f.title"
+            class="feature-card"
+            v-reveal="{ delay: i * 60 }"
+          >
             <div class="feature-icon"><Icon :name="f.icon" :size="30" :stroke-width="1.5" /></div>
             <h3 class="feature-title">{{ f.title }}</h3>
             <p class="feature-desc">{{ f.desc }}</p>
@@ -79,7 +85,7 @@
 
     <!-- CTA -->
     <section class="cta-section">
-      <div class="cta-inner">
+      <div class="cta-inner" v-reveal="{ y: 24 }">
         <h2>지금 바로 시작하세요</h2>
         <p>수백 곳의 현장과 스타트업이 PoCket에서 실증을 연결하고 있습니다.</p>
         <router-link to="/register" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
