@@ -1,11 +1,15 @@
 <template>
-  <router-link :to="`/testbeds/${slot.id}`" class="course-card" :class="{ closed }">
+  <router-link :to="`/testbeds/${slot.id}`" class="course-card" :class="{ closed, mine }">
     <!-- 산업군 타일 -->
     <SlotThumb class="card-thumb" :course="slot" :icon-size="42" />
 
     <!-- 내용 -->
     <div class="card-body">
-      <span class="badge" :style="categoryStyle(slot.category)">{{ cat.label }}</span>
+      <div class="card-tags">
+        <span class="badge" :style="categoryStyle(slot.category)">{{ cat.label }}</span>
+        <!-- 목록에서 이미 신청한 건을 구분하지 못하면 상세까지 들어가야 안다 -->
+        <span v-if="mine" class="mine-tag">{{ mineLabel }}</span>
+      </div>
       <h3 class="card-title">{{ slot.title }}</h3>
       <div class="card-meta">
         <span class="host">{{ hostName }}</span>
@@ -23,7 +27,8 @@
 <script setup>
 import { computed } from 'vue'
 import SlotThumb from '@/components/SlotThumb.vue'
-import { category, categoryStyle, courseStatus, formatFee } from '@/domain/pocket.js'
+import { category, categoryStyle, courseStatus, enrollmentStatus, formatFee } from '@/domain/pocket.js'
+import { isMine, myStatusOf } from '@/domain/myEnrollments.js'
 import { hostName as resolveHost } from '@/domain/hosts.js'
 
 // prop 이름은 백엔드 응답 형태(course)를 그대로 받되, 화면에서는 실증 슬롯으로 읽는다.
@@ -38,6 +43,10 @@ const hostName = computed(() => resolveHost(props.course))
 
 /** 모집 마감 여부. COURSE_STATUS 의 tone 이 단일 출처다. */
 const closed = computed(() => courseStatus(props.course?.status).tone === 'off')
+
+/** 내가 이미 신청한 슬롯인가 */
+const mine = computed(() => isMine(props.course))
+const mineLabel = computed(() => enrollmentStatus(myStatusOf(props.course)).label)
 
 const runCount = computed(() =>
   Number(props.course?.enrollmentCount ?? props.course?.enrollment_count ?? 0).toLocaleString()
@@ -96,7 +105,7 @@ const runCount = computed(() =>
   gap: 10px;
   flex: 1;
 }
-.badge { align-self: flex-start; }
+.card-tags { align-self: flex-start; }
 .card-title {
   font-size: 15.5px;
   font-weight: 700;
@@ -136,6 +145,26 @@ const runCount = computed(() =>
 }
 
 /* 마감된 슬롯은 목록에서 한눈에 걸러져야 한다 */
+/* 이미 신청한 슬롯 — 목록에서 바로 구분된다 */
+.card-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mine-tag {
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-light);
+  color: var(--color-link);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.course-card.mine {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glass), inset 0 0 0 1px var(--color-primary);
+}
+
 .closed-tag {
   flex-shrink: 0;
   padding: 3px 9px;

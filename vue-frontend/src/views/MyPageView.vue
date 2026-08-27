@@ -225,6 +225,7 @@ import {
   recommendMessage as buildRecommendMessage
 } from '@/domain/pocket.js'
 import { primeHosts, primeUsers, userName } from '@/domain/hosts.js'
+import { primeMyEnrollments } from '@/domain/myEnrollments.js'
 
 const auth = useAuthStore()
 
@@ -473,6 +474,8 @@ onMounted(async () => {
     await loadInstructorCourses()
   } else {
     instructorLoading.value = false
+    // 추천 카드에 '신청함' 표시를 붙이기 위해
+    primeMyEnrollments()
     await loadStudentRecommendations()
   }
 })

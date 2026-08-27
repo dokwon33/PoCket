@@ -102,6 +102,7 @@ import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { useCourseStore } from '@/store/course.js'
 import { enrollmentApi } from '@/api/enrollment.js'
+import { refreshMyEnrollments } from '@/domain/myEnrollments.js'
 import { useAuthStore } from '@/store/auth.js'
 import { category, categoryStyle, courseStatus, isHost, formatFee, apiErrorMessage } from '@/domain/pocket.js'
 import { hostName as resolveHost } from '@/domain/hosts.js'
@@ -116,7 +117,10 @@ const auth = useAuthStore()
 
 const enrolling = ref(false)
 const enrollError = ref('')
-const enrollmentStatus = ref('NONE') // NONE | PENDING | ACTIVE
+const enrollmentStatus = ref('NONE')
+/* 신청 이력이 도착하기 전에는 버튼을 잠근다.
+   초깃값 'NONE' 만 믿고 누르면 결제 확인 시트가 뜨고 백엔드가 409 로 거절한다. */
+const statusLoading = ref(true) // NONE | PENDING | ACTIVE
 
 const course = computed(() => courseStore.selectedCourse)
 const loading = computed(() => courseStore.loading)
@@ -152,6 +156,7 @@ const closed = computed(() => courseStatus(course.value?.status).tone === 'off')
 
 const buttonLabel = computed(() => {
   if (host.value) return '호스트 계정은 신청 불가'
+  if (statusLoading.value) return '신청 이력 확인 중…'
   if (enrollmentStatus.value === 'ACTIVE') return '내 실증 목록으로 이동'
   if (enrollmentStatus.value === 'PENDING') return '확정 처리 중…'
   if (closed.value) return '모집이 마감된 슬롯입니다'
@@ -160,6 +165,7 @@ const buttonLabel = computed(() => {
 
 const buttonDisabled = computed(() => {
   if (enrolling.value) return true
+  if (statusLoading.value) return true
   if (host.value) return true
   if (enrollmentStatus.value === 'PENDING') return true
   // 마감된 슬롯에 결제 버튼이 열려 있으면 결제부터 하고 거절당한다
@@ -190,6 +196,7 @@ const helperText = computed(() => {
 async function loadEnrollmentStatus() {
   if (!auth.user?.id || !course.value?.id || host.value) {
     enrollmentStatus.value = 'NONE'
+    statusLoading.value = false
     return
   }
 
@@ -214,6 +221,8 @@ async function loadEnrollmentStatus() {
   } catch (e) {
     console.error('[CourseDetail] failed to load enrollment status:', e)
     enrollmentStatus.value = 'NONE'
+  } finally {
+    statusLoading.value = false
   }
 }
 
@@ -274,6 +283,8 @@ async function confirmAndEnroll() {
     await enrollmentApi.enroll(course.value.id)
     enrollmentStatus.value = 'PENDING'
     confirmOpen.value = false
+    // 목록·랜딩·추천이 보는 캐시를 갱신해 '신청함' 표시가 바로 붙게 한다
+    refreshMyEnrollments()
     watchUntilConfirmed()
   } catch (e) {
     console.error('[CourseDetail] enroll failed:', e)
