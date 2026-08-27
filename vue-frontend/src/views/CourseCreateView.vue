@@ -79,10 +79,13 @@
                   v-model.number="form.price"
                   type="number"
                   min="0"
-                  step="1000"
+                  :max="PRICE_MAX"
+                  step="1"
                   class="form-input"
-                  placeholder="예: 50000"
+                  placeholder="예: 1200000"
+                  aria-describedby="price-hint"
                 />
+                <p id="price-hint" class="field-hint">최대 {{ formatFee(PRICE_MAX) }}원까지 입력할 수 있습니다.</p>
               </div>
             </div>
 
@@ -122,7 +125,7 @@ import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { courseApi } from '@/api/course.js'
 import { useAuthStore } from '@/store/auth.js'
-import { CATEGORIES, isHost, apiErrorMessage } from '@/domain/pocket.js'
+import { CATEGORIES, PRICE_MAX, formatFee, isHost, apiErrorMessage } from '@/domain/pocket.js'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -174,6 +177,14 @@ function validateForm() {
   const price = Number(form.price)
   if (Number.isNaN(price) || price < 0) {
     validationError.value = '실증비는 0 이상의 숫자로 입력해 주세요.'
+    return false
+  }
+
+  // courses.price 가 DECIMAL(10,2) 라 정수부가 8자리뿐이다.
+  // 넘겨 보내면 DB 가 "Out of range value for column 'price'" 로 거절하고
+  // 사용자에게는 일반적인 실패 문구만 보인다. 입력 단계에서 막는다.
+  if (price > PRICE_MAX) {
+    validationError.value = `실증비는 최대 ${formatFee(PRICE_MAX)}원까지 입력할 수 있습니다.`
     return false
   }
 
@@ -324,6 +335,13 @@ async function handleSubmit() {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+/* 제약을 입력 전에 알려 준다 — 보내고 나서 거절당하면 이유를 모른다 */
+.field-hint {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
 }
 
 .form-input,
