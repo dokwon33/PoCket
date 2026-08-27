@@ -180,7 +180,6 @@ async function fillSlots(list) {
   primeHosts(Object.values(slots.value))
 }
 
-
 /** 재시도 버튼이 다시 부를 수 있도록 뽑아 둔다 */
 async function load() {
   loading.value = true
@@ -224,13 +223,6 @@ onMounted(load)
   grid-template-columns: 220px 1fr;
   gap: 28px;
 }
-
-
-
-
-
-
-
 
 .main-content {
   min-width: 0;
@@ -282,26 +274,6 @@ onMounted(load)
   height: 100%;
   object-fit: contain;
   padding: 8px;
-}
-
-.thumb-teal {
-  background: #E1F5EE;
-}
-
-.thumb-blue {
-  background: #E6F1FB;
-}
-
-.thumb-purple {
-  background: #EEEDFE;
-}
-
-.thumb-pink {
-  background: #FBEAF0;
-}
-
-.thumb-gray {
-  background: #F1EFE8;
 }
 
 .enroll-info {

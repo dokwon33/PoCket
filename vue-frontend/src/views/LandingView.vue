@@ -356,10 +356,6 @@ const features = [
   background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 55%);
   pointer-events: none;
 }
-.thumb-teal   { background: #E1F5EE; }
-.thumb-blue   { background: #E6F1FB; }
-.thumb-purple { background: #EEEDFE; }
-.thumb-pink   { background: #FBEAF0; }
 /* 썸네일은 SlotThumb(자식 컴포넌트) 안에 있어 :deep() 으로 짚어야 한다 */
 .card-thumb :deep(.thumb-symbol),
 .card-thumb :deep(.thumb-photo) { transition: var(--transition); }

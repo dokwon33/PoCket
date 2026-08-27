@@ -434,11 +434,6 @@ watch(
 }
 
 .enroll-thumb-icon { opacity: 0.72; }
-.thumb-teal { background: #E1F5EE; }
-.thumb-blue { background: #E6F1FB; }
-.thumb-purple { background: #EEEDFE; }
-.thumb-pink { background: #FBEAF0; }
-.thumb-gray { background: #F1EFE8; }
 
 .enroll-body {
   padding: 20px;
