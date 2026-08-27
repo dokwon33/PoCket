@@ -37,6 +37,21 @@
               <span :class="['status-badge', `status-${enrollmentStatus(item.status).tone}`]">
                 {{ enrollmentStatus(item.status).label }}
               </span>
+
+              <!-- 확정된 실증 건만 평가할 수 있다 -->
+              <div v-if="writtenOf(item)" class="review-done">
+                <StarRating :model-value="writtenOf(item).rating" readonly :size="15" />
+                <button type="button" class="text-btn" @click="openReview(item)">평가 수정</button>
+              </div>
+              <button
+                v-else-if="pendingOf(item)"
+                type="button"
+                class="btn btn-primary btn-sm"
+                @click="openReview(item)"
+              >
+                평가하기
+              </button>
+
               <router-link :to="`/testbeds/${item.courseId}`" class="btn btn-ghost btn-sm">
                 슬롯 보기
               </router-link>
@@ -53,6 +68,14 @@
         </div>
       </main>
     </div>
+
+    <ReviewModal
+      v-if="reviewTarget"
+      :target="reviewTarget"
+      :existing="reviewExisting"
+      @close="closeReview"
+      @saved="onReviewSaved"
+    />
   </div>
 </template>
 
@@ -62,10 +85,13 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import Icon from '@/components/Icon.vue'
+import StarRating from '@/components/StarRating.vue'
+import ReviewModal from '@/components/ReviewModal.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
+import { reviewApi } from '@/api/review.js'
 import { useAuthStore } from '@/store/auth.js'
 import { category, categoryLabel, categoryStyle, enrollmentStatus, isHost } from '@/domain/pocket.js'
 import { hostName as resolveHost, primeHosts } from '@/domain/hosts.js'
@@ -85,6 +111,53 @@ const loading = ref(true)
  * 그래서 슬롯 원본을 한 번씩 직접 조회해 채운다.
  */
 const slots = ref({})
+
+/* ── 상호 평가 ────────────────────────────────────────────
+   pending  : 아직 평가하지 않은 확정 건 (enrollmentId -> 정보)
+   written  : 내가 이미 남긴 평가 (enrollmentId -> review)
+   두 목록으로 카드마다 '평가하기' / '평가 수정' 중 무엇을 보일지 정한다. */
+const pending = ref({})
+const written = ref({})
+const reviewTarget = ref(null)
+const reviewExisting = ref(null)
+
+const pendingOf = (item) => pending.value[item?.id] || null
+const writtenOf = (item) => written.value[item?.id] || null
+
+async function loadReviews() {
+  const [p, w] = await Promise.all([
+    reviewApi.myPending().catch((e) => {
+      console.warn('[Enrollment] 미평가 목록 조회 실패:', e?.response?.status)
+      return null
+    }),
+    reviewApi.myWritten().catch((e) => {
+      console.warn('[Enrollment] 작성한 평가 조회 실패:', e?.response?.status)
+      return null
+    })
+  ])
+  const asArray = (res) => (Array.isArray(res?.data) ? res.data : res?.data?.data || [])
+  pending.value = Object.fromEntries(asArray(p).map((r) => [r.enrollmentId, r]))
+  written.value = Object.fromEntries(asArray(w).map((r) => [r.enrollmentId, r]))
+}
+
+function openReview(item) {
+  reviewExisting.value = writtenOf(item)
+  reviewTarget.value = {
+    enrollmentId: item.id,
+    revieweeId: pendingOf(item)?.revieweeId ?? null,
+    slotTitle: slotOf(item).title || item.course?.title
+  }
+}
+
+function closeReview() {
+  reviewTarget.value = null
+  reviewExisting.value = null
+}
+
+async function onReviewSaved() {
+  closeReview()
+  await loadReviews()
+}
 
 function slotOf(item) {
   return slots.value[item?.courseId] || item?.course || {}
@@ -128,7 +201,7 @@ onMounted(async () => {
     } else {
       enrollments.value = []
     }
-    await fillSlots(enrollments.value)
+    await Promise.all([fillSlots(enrollments.value), loadReviews()])
   } catch (error) {
     console.error('[EnrollmentView] failed to load enrollments:', error)
     enrollments.value = []
@@ -240,6 +313,24 @@ onMounted(async () => {
 }
 
 .enroll-info .badge { align-self: flex-start; }
+
+.review-done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.text-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: var(--font-sans);
+}
 
 .enroll-title {
   font-size: 15px;

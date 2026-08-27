@@ -26,6 +26,15 @@
                 <span class="meta-label">모집 상태</span>
                 <span class="meta-value">{{ courseStatus(course.status).label }}</span>
               </div>
+              <div class="meta-item">
+                <span class="meta-label">호스트 평판</span>
+                <span v-if="reputation?.reviewCount" class="meta-value meta-rating">
+                  <StarRating :model-value="reputation.averageRating || 0" readonly :size="14" />
+                  {{ (reputation.averageRating || 0).toFixed(1) }}
+                  <span class="meta-sub">({{ reputation.reviewCount }}건)</span>
+                </span>
+                <span v-else class="meta-value meta-muted">아직 평가 없음</span>
+              </div>
             </div>
           </div>
 
@@ -89,6 +98,8 @@ import { enrollmentApi } from '@/api/enrollment.js'
 import { useAuthStore } from '@/store/auth.js'
 import { category, categoryStyle, courseStatus, isHost, formatFee, apiErrorMessage } from '@/domain/pocket.js'
 import { hostName as resolveHost } from '@/domain/hosts.js'
+import StarRating from '@/components/StarRating.vue'
+import { reviewApi } from '@/api/review.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,6 +124,20 @@ const displayRunCount = computed(() =>
 )
 
 const displayPrice = computed(() => formatFee(course.value?.price))
+
+/* 호스트 평판 — 공개 API 라 로그인 없이도 조회된다 */
+const reputation = ref(null)
+
+async function loadReputation(instructorId) {
+  reputation.value = null
+  if (!instructorId) return
+  try {
+    const res = await reviewApi.reputation(instructorId)
+    reputation.value = res.data
+  } catch (e) {
+    console.warn('[CourseDetail] 평판 조회 실패:', e?.response?.status)
+  }
+}
 
 const buttonLabel = computed(() => {
   if (host.value) return '호스트 계정은 신청 불가'
@@ -213,6 +238,7 @@ async function handlePrimaryAction() {
 
 onMounted(async () => {
   await courseStore.fetchCourse(route.params.id)
+  loadReputation(courseStore.selectedCourse?.instructorId)
   console.log('[CourseDetail] selectedCourse =', courseStore.selectedCourse)
   await loadEnrollmentStatus()
 })
@@ -223,6 +249,7 @@ watch(
     console.log('[CourseDetail] selectedCourse changed =', value)
     if (value?.id) {
       await loadEnrollmentStatus()
+      loadReputation(value.instructorId)
     }
   },
   { deep: true }
@@ -294,6 +321,23 @@ watch(
 .meta-item + .meta-item { border-left: 1px solid var(--glass-edge); }
 .meta-label {
   font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.meta-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.meta-sub {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.meta-muted {
+  font-family: var(--font-sans);
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-text-muted);
 }

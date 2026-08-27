@@ -17,6 +17,39 @@
           </div>
         </div>
 
+        <!-- 받은 평가 : 역할과 무관하게 상대방이 남긴 평가 -->
+        <section class="reviews-section">
+          <div class="section-head">
+            <h3 class="section-title">{{ host ? '내 테스트베드에 대한 평가' : '받은 평가' }}</h3>
+            <span v-if="reputation?.reviewCount" class="reputation-summary">
+              <StarRating :model-value="reputation.averageRating || 0" readonly :size="16" />
+              <strong>{{ (reputation.averageRating || 0).toFixed(1) }}</strong>
+              <span class="reputation-count">{{ reputation.reviewCount }}건</span>
+            </span>
+          </div>
+
+          <div v-if="reviewsLoading" class="empty-text">불러오는 중...</div>
+
+          <ul v-else-if="received.length" class="review-list">
+            <li v-for="r in received" :key="r.id" class="review-item">
+              <div class="review-top">
+                <StarRating :model-value="r.rating" readonly :size="14" />
+                <span class="review-author">{{ reviewerName(r) }}</span>
+                <span class="review-role">{{ reviewerRoleLabel(r.reviewerRole) }}</span>
+                <span class="review-date">{{ formatDate(r.createdAt) }}</span>
+              </div>
+              <router-link :to="`/testbeds/${r.courseId}`" class="review-slot">
+                {{ reviewSlots[r.courseId]?.title || `실증 슬롯 #${r.courseId}` }}
+              </router-link>
+              <p v-if="r.comment" class="review-comment">{{ r.comment }}</p>
+            </li>
+          </ul>
+
+          <p v-else class="empty-text">
+            {{ host ? '아직 내 테스트베드에 남겨진 평가가 없습니다.' : '아직 받은 평가가 없습니다.' }}
+          </p>
+        </section>
+
         <!-- 스타트업 화면 -->
         <section v-if="!host" class="recommend-section">
           <h3 class="section-title">AI 추천 테스트베드</h3>
@@ -146,23 +179,86 @@ import { ref, computed, onMounted } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import CourseCard from '@/components/CourseCard.vue'
+import StarRating from '@/components/StarRating.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { useAuthStore } from '@/store/auth.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
+import { reviewApi } from '@/api/review.js'
 import {
   categoryLabel,
   courseStatus,
   isHost,
   roleLabel,
+  reviewerRoleLabel,
+  maskName,
   recommendMessage as buildRecommendMessage
 } from '@/domain/pocket.js'
-import { primeHosts } from '@/domain/hosts.js'
+import { primeHosts, primeUsers, userName } from '@/domain/hosts.js'
 
 const auth = useAuthStore()
 
 const host = computed(() => isHost(auth.user?.role))
+
+/* ── 받은 평가 ── */
+const reputation = ref(null)
+const received = ref([])
+const reviewsLoading = ref(true)
+/* 평가가 어느 슬롯에 대한 것인지 보여주려면 제목이 필요하다.
+   ReviewResponse 에는 courseId 만 있으므로 슬롯을 한 번씩 조회해 채운다. */
+const reviewSlots = ref({})
+
+/** 평가자 이름 — 가운데를 가려서 보여준다. 이름을 못 받아오면 역할로 대체한다. */
+function reviewerName(review) {
+  const name = userName(review?.reviewerId)
+  return name ? maskName(name) : reviewerRoleLabel(review?.reviewerRole)
+}
+
+function formatDate(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ''
+    : `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
+async function fillReviewSlots(reviews) {
+  const ids = [...new Set(reviews.map((r) => r.courseId).filter((v) => v != null))]
+  const fetched = await Promise.all(
+    ids.map((cid) =>
+      courseApi
+        .getById(cid)
+        .then((res) => [cid, res.data?.data ?? res.data])
+        .catch(() => null)
+    )
+  )
+  reviewSlots.value = Object.fromEntries(fetched.filter(Boolean))
+}
+
+async function loadReviews() {
+  const id = auth.user?.id
+  if (!id) {
+    reviewsLoading.value = false
+    return
+  }
+  try {
+    const [rep, list] = await Promise.all([
+      reviewApi.reputation(id),
+      reviewApi.receivedBy(id)
+    ])
+    reputation.value = rep.data
+    received.value = Array.isArray(list.data) ? list.data : list.data?.data || []
+    await Promise.all([
+      fillReviewSlots(received.value),
+      primeUsers(received.value.map((r) => r.reviewerId))
+    ])
+  } catch (e) {
+    console.warn('[MyPage] 평가 조회 실패:', e?.response?.status)
+  } finally {
+    reviewsLoading.value = false
+  }
+}
 
 /* 스타트업용 */
 const recommendations = ref([])
@@ -306,6 +402,8 @@ async function loadInstructorCourses() {
 }
 
 onMounted(async () => {
+  loadReviews()
+
   if (host.value) {
     recommendLoading.value = false
     await loadInstructorCourses()
@@ -317,6 +415,76 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.reviews-section {
+  margin-top: 32px;
+}
+.reputation-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+.reputation-count {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.review-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+.review-item {
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass);
+}
+.review-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.review-author {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+.review-role {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.review-date {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+.review-slot {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.review-slot:hover { text-decoration: underline; }
+.review-comment {
+  margin-top: 10px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
 .page-wrapper {
   min-height: 100vh;
   background: var(--color-bg-secondary);

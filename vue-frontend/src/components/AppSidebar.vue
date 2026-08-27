@@ -16,6 +16,14 @@
 
     <div class="sidebar-section">
       <div class="sidebar-label">계정</div>
+      <router-link
+        to="/mypage"
+        class="sidebar-item"
+        :class="{ active: route.path === '/mypage' }"
+      >
+        <Icon name="user" :size="19" class="si-icon" />
+        마이페이지
+      </router-link>
       <button class="sidebar-item sidebar-btn" @click="auth.logout()">
         <Icon name="logout" :size="19" class="si-icon" />
         로그아웃
@@ -47,8 +55,8 @@ const menu = computed(() => [
   { to: '/testbeds', icon: 'compass', label: '테스트베드 탐색', exact: true },
   ...(host.value
     ? [{ to: '/testbeds/new', icon: 'plus', label: '실증 슬롯 등록' }]
-    : [{ to: '/applications', icon: 'check', label: '내 실증 신청' }]),
-  { to: '/mypage', icon: 'star', label: '마이페이지' }
+    : [{ to: '/applications', icon: 'check', label: '내 실증 신청' }])
+  // 마이페이지는 '계정' 섹션에 둔다 — 서비스 메뉴가 아니라 내 계정에 속한 화면이다.
 ])
 
 // '/testbeds' 는 '/testbeds/new' 에서 활성으로 보이면 안 되므로 정확히 비교한다.
