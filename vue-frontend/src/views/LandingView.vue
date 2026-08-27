@@ -7,12 +7,11 @@
     <section class="hero">
       <div class="hero-inner">
         <div class="hero-content fade-in-up">
-          <span class="hero-badge">B2B 실증 테스트베드 매칭</span>
-          <h1 class="hero-title">제품을 검증할 현장,<br>더 빠르게 찾으세요</h1>
-          <p class="hero-desc">카페·물류센터·병원 등 실제 현장이 등록한 실증 슬롯을 AI가 우리 제품에 맞춰 추천합니다.</p>
+          <span class="hero-badge">PoCket 테스트베드</span>
+          <h1 class="hero-title">필요한 시간대만 빌려도<br>진짜 손님이 써보는 테스트베드</h1>
           <div class="hero-actions">
-            <router-link to="/register" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
-            <router-link to="/testbeds" class="btn btn-outline btn-lg">테스트베드 둘러보기</router-link>
+            <router-link to="/testbeds" class="btn btn-primary btn-lg">현장 둘러보기</router-link>
+            <router-link to="/register" class="btn btn-outline btn-lg">우리 현장 등록하기</router-link>
           </div>
           <div class="hero-stats">
             <div v-for="(s, i) in stats" :key="s.label" class="stat">
@@ -33,7 +32,7 @@
     <section class="popular-section">
       <div class="section-inner">
         <div class="section-header" v-reveal>
-          <h2 class="section-title">인기 테스트베드</h2>
+          <h2 class="section-title">지금 열려 있는 현장</h2>
           <router-link to="/testbeds" class="section-link">전체 보기 →</router-link>
         </div>
         <div class="course-grid">
@@ -67,7 +66,7 @@
     <!-- 특징 섹션 -->
     <section class="features-section">
       <div class="section-inner">
-        <h2 class="section-title center" v-reveal>왜 PoCket인가요?</h2>
+        <h2 class="section-title center" v-reveal>현장을 구하는 데 몇 달을 쓰지 않도록</h2>
         <div class="features-grid">
           <div
             v-for="(f, i) in features"
@@ -86,9 +85,9 @@
     <!-- CTA -->
     <section class="cta-section">
       <div class="cta-inner" v-reveal="{ y: 24 }">
-        <h2>지금 바로 시작하세요</h2>
-        <p>수백 곳의 현장과 스타트업이 PoCket에서 실증을 연결하고 있습니다.</p>
-        <router-link to="/register" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
+        <h2>검증할 현장부터 골라보세요</h2>
+        <p>조건을 보고, 신청하고, 결제하면 확정됩니다. 그 다음은 현장에서 확인하세요.</p>
+        <router-link to="/testbeds" class="btn btn-primary btn-lg">현장 둘러보기</router-link>
       </div>
     </section>
 
@@ -166,10 +165,10 @@ const stats = [
 ]
 
 const features = [
-  { icon:'target', title:'AI 테스트베드 매칭', desc:'제품 카테고리와 실증 이력을 분석해 맞는 현장을 추천합니다.' },
-  { icon:'office', title:'검증된 실제 현장', desc:'카페·물류센터·병원 등 운영 중인 현장이 직접 슬롯을 등록합니다.' },
-  { icon:'document', title:'신청부터 확정까지', desc:'신청·결제·확정을 한 흐름으로 처리해 실증 준비 기간을 줄입니다.' },
-  { icon:'star', title:'상호 평가 기반 신뢰', desc:'실증이 끝나면 호스트와 스타트업이 서로 평가해 다음 매칭의 근거가 됩니다.' },
+  { icon:'target', title:'조건에 맞는 현장을 찾아줍니다', desc:'제품 카테고리와 지난 실증 이력을 함께 봅니다.' },
+  { icon:'office', title:'운영 중인 현장이 직접 등록합니다', desc:'카페·리테일·물류·헬스케어·오피스 등 8개 산업군.' },
+  { icon:'document', title:'결제하면 바로 확정됩니다', desc:'따로 심사를 기다릴 필요가 없습니다.' },
+  { icon:'star', title:'끝나면 서로 평가합니다', desc:'그 평판이 다음 매칭의 근거가 됩니다.' },
 ]
 </script>
 
@@ -216,13 +215,6 @@ const features = [
   letter-spacing: -0.045em;
   color: var(--color-text-primary);
   margin-bottom: 20px;
-}
-.hero-desc {
-  font-size: 17.5px;
-  color: var(--color-text-secondary);
-  line-height: 1.72;
-  max-width: 480px;
-  margin-bottom: 36px;
 }
 .hero-actions {
   display: flex;
@@ -287,7 +279,6 @@ const features = [
   /* 로고 타일이 auto 트랙이라 텍스트 칸의 최소 폭을 밀어낸다 */
   .hero-visual { display: none; }
   .hero-title { font-size: 40px; }
-  .hero-desc { max-width: none; }
   .course-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .features-section { padding: 72px 0; }
@@ -297,7 +288,6 @@ const features = [
 @media (max-width: 600px) {
   .hero { padding: 56px 0 48px; }
   .hero-title { font-size: 31px; }
-  .hero-desc { font-size: 16px; }
   .hero-actions { flex-direction: column; align-items: stretch; }
   .hero-actions .btn { width: 100%; text-align: center; }
   .hero-stats { flex-wrap: wrap; }
