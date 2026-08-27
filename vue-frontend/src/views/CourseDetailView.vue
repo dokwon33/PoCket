@@ -40,9 +40,7 @@
 
           <!-- 우측 결제/신청 카드 -->
           <div class="enroll-card fade-in">
-            <div class="enroll-thumb" :style="{ background: cat.tint }">
-              <Icon class="enroll-thumb-icon" :name="cat.icon" :size="52" :stroke-width="1.3" :style="{ color: cat.ink }" />
-            </div>
+            <SlotThumb class="enroll-thumb" :course="course" :icon-size="52" />
 
             <div class="enroll-body">
               <div class="enroll-price">₩{{ displayPrice }}</div>
@@ -100,7 +98,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
-import Icon from '@/components/Icon.vue'
+import SlotThumb from '@/components/SlotThumb.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { useCourseStore } from '@/store/course.js'

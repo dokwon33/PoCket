@@ -40,6 +40,23 @@
               ></textarea>
             </div>
 
+            <div class="form-group">
+              <label class="form-label" for="thumbnail">현장 사진 <span class="optional">(선택)</span></label>
+              <input
+                id="thumbnail"
+                v-model.trim="form.thumbnailUrl"
+                type="url"
+                class="form-input"
+                placeholder="https://example.com/photo.jpg"
+              />
+              <p class="field-help">
+                사진 주소를 넣으면 슬롯 카드에 사진이 보입니다. 비워 두면 산업군 기호가 표시됩니다.
+              </p>
+              <p class="field-warn">
+                아직 서버에 사진을 저장하는 기능이 준비되지 않아, 지금 입력한 주소는 저장되지 않습니다.
+              </p>
+            </div>
+
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="category">산업군</label>
@@ -114,7 +131,8 @@ const form = reactive({
   title: '',
   description: '',
   category: '',
-  price: null
+  price: null,
+  thumbnailUrl: ''
 })
 
 const submitting = ref(false)
@@ -175,7 +193,9 @@ async function handleSubmit() {
       title: form.title,
       description: form.description,
       category: form.category,
-      price: Number(form.price)
+      price: Number(form.price),
+      // 백엔드에 아직 없는 필드. 지금은 무시되지만, 컬럼이 생기면 이 줄만으로 동작한다.
+      thumbnailUrl: form.thumbnailUrl || null
     }
 
     const res = await courseApi.create(payload)
@@ -281,6 +301,25 @@ async function handleSubmit() {
   gap: 8px;
 }
 
+.optional {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.field-help {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.field-warn {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
 .form-label {
   font-size: 14px;
   font-weight: 600;

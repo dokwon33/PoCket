@@ -15,15 +15,7 @@
 
         <div v-else-if="enrollments.length" class="enrollment-list fade-in">
           <div v-for="item in enrollments" :key="item.id" class="enrollment-card">
-            <div class="enroll-thumb" :style="{ background: category(slotOf(item).category).tint }">
-              <Icon
-                class="enroll-thumb-icon"
-                :name="category(slotOf(item).category).icon"
-                :size="30"
-                :stroke-width="1.5"
-                :style="{ color: category(slotOf(item).category).ink }"
-              />
-            </div>
+            <SlotThumb class="enroll-thumb" :course="slotOf(item)" :icon-size="30" />
 
             <div class="enroll-info">
               <span class="badge" :style="categoryStyle(slotOf(item).category)">
@@ -85,6 +77,7 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import Icon from '@/components/Icon.vue'
+import SlotThumb from '@/components/SlotThumb.vue'
 import StarRating from '@/components/StarRating.vue'
 import ReviewModal from '@/components/ReviewModal.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
