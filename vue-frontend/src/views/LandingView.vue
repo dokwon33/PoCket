@@ -8,7 +8,7 @@
       <div class="hero-inner">
         <div class="hero-content fade-in-up">
           <span class="hero-badge">PoCket 테스트베드</span>
-          <h1 class="hero-title">필요한 시간대만 빌려도<br>진짜 손님이 써보는 테스트베드</h1>
+          <h1 class="hero-title">제품을 검증할 현장,<br>더 빠르게 찾으세요</h1>
           <div class="hero-actions">
             <router-link to="/testbeds" class="btn btn-primary btn-lg">현장 둘러보기</router-link>
             <router-link to="/register" class="btn btn-outline btn-lg">우리 현장 등록하기</router-link>
