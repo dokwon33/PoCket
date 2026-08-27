@@ -130,6 +130,16 @@ export function maskName(name) {
  *
  * tone 은 화면에서 색을 고르는 힌트다: wait(대기) / done(완료) / off(종료·실패)
  * ------------------------------------------------------------------ */
+/**
+ * 실증비 상한
+ *
+ * courses.price 가 DECIMAL(10,2) 라 정수부가 8자리뿐이다 — 최대 99,999,999.99.
+ * 이 값을 넘겨 보내면 DB 가 거절한다:
+ *   ERROR 1264 (22003): Out of range value for column 'price'
+ * 백엔드를 못 고치므로 입력 단계에서 막는다.
+ */
+export const PRICE_MAX = 99999999
+
 export const ENROLLMENT_STATUS = {
   // 호스트 승인 단계는 없다. 결제가 확인되면 Kafka 소비 후 자동으로 ACTIVE 가 된다.
   // '승인 대기' 라고 쓰면 사용자가 며칠짜리 심사로 오해한다.
