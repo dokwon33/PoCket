@@ -28,7 +28,7 @@
       </template>
     </div>
 
-    <p class="dev-hint">Ctrl(⌘) + Alt + D 로 여닫습니다</p>
+    <p class="dev-hint">Ctrl + Alt(⌥) + D 로 여닫습니다 · <code>?dev=1</code> 로도 열립니다</p>
   </div>
 </template>
 
@@ -48,7 +48,13 @@ const busy = ref(false)
 const result = ref(null)
 
 function onKey(e) {
-  // Ctrl(또는 ⌘) + Alt + D
+  // Ctrl + Alt + D
+  //
+  // ⌘ 도 받지만 맥에서는 ⌘⌥D 를 macOS 가 먼저 가로챈다(Dock 자동 숨기기).
+  // 그래서 안내에는 Ctrl 만 적는다.
+  //
+  // 맥에서 Option 을 누르면 e.key 가 'd' 가 아니라 '∂' 가 된다.
+  // e.code 는 물리 키라 배열·조합과 무관하게 'KeyD' 로 온다.
   if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key === 'd' || e.key === 'D' || e.code === 'KeyD')) {
     e.preventDefault()
     open.value = !open.value
@@ -75,7 +81,11 @@ async function reset() {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKey))
+onMounted(() => {
+  // 단축키가 OS·확장 프로그램에 막히는 경우를 위한 대비책
+  if (new URLSearchParams(location.search).get('dev') === '1') open.value = true
+  window.addEventListener('keydown', onKey)
+})
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
@@ -155,6 +165,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .dev-danger { background: #7A2B2B; }
 .dev-danger:hover:not(:disabled) { background: #8F3333; }
 
+.dev-hint code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #2C2F40;
+  color: #B9BDD6;
+}
 .dev-hint {
   margin-top: 10px;
   color: #6E7391;
