@@ -2,36 +2,7 @@
   <div class="page-wrapper">
     <AppHeader />
     <div class="page-layout">
-      <aside class="sidebar">
-        <div class="sidebar-section">
-          <div class="sidebar-label">메뉴</div>
-
-          <router-link to="/testbeds" class="sidebar-item">
-            <Icon name="compass" :size="19" class="si-icon" /> 테스트베드 탐색
-          </router-link>
-
-          <router-link
-            to="/applications"
-            class="sidebar-item active"
-          >
-            <Icon name="check" :size="19" class="si-icon" /> 내 실증 신청
-          </router-link>
-
-          <router-link to="/mypage" class="sidebar-item">
-            <Icon name="star" :size="19" class="si-icon" /> 마이페이지
-          </router-link>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-label">계정</div>
-          <router-link to="/mypage" class="sidebar-item">
-            <Icon name="user" :size="19" class="si-icon" /> 마이페이지
-          </router-link>
-          <button class="sidebar-item sidebar-btn" @click="handleLogout">
-            <Icon name="logout" :size="19" class="si-icon" /> 로그아웃
-          </button>
-        </div>
-      </aside>
+      <AppSidebar />
 
       <main class="main-content">
         <h1 class="page-title">내 실증 신청</h1>
@@ -44,22 +15,22 @@
 
         <div v-else-if="enrollments.length" class="enrollment-list fade-in">
           <div v-for="item in enrollments" :key="item.id" class="enrollment-card">
-            <div class="enroll-thumb" :style="{ background: category(item.course?.category).tint }">
+            <div class="enroll-thumb" :style="{ background: category(slotOf(item).category).tint }">
               <Icon
                 class="enroll-thumb-icon"
-                :name="category(item.course?.category).icon"
+                :name="category(slotOf(item).category).icon"
                 :size="30"
                 :stroke-width="1.5"
-                :style="{ color: category(item.course?.category).ink }"
+                :style="{ color: category(slotOf(item).category).ink }"
               />
             </div>
 
             <div class="enroll-info">
-              <span class="badge" :style="categoryStyle(item.course?.category)">
-                {{ categoryLabel(item.course?.category) }}
+              <span class="badge" :style="categoryStyle(slotOf(item).category)">
+                {{ categoryLabel(slotOf(item).category) }}
               </span>
-              <h3 class="enroll-title">{{ item.course?.title }}</h3>
-              <p class="enroll-instructor">호스트: {{ resolveHost(item.course) }}</p>
+              <h3 class="enroll-title">{{ slotOf(item).title || item.course?.title }}</h3>
+              <p class="enroll-instructor">호스트: {{ resolveHost(slotOf(item)) }}</p>
             </div>
 
             <div class="enroll-status">
@@ -89,10 +60,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import AppSidebar from '@/components/AppSidebar.vue'
 import Icon from '@/components/Icon.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { enrollmentApi } from '@/api/enrollment.js'
+import { courseApi } from '@/api/course.js'
 import { useAuthStore } from '@/store/auth.js'
 import { category, categoryLabel, categoryStyle, enrollmentStatus, isHost } from '@/domain/pocket.js'
 import { hostName as resolveHost, primeHosts } from '@/domain/hosts.js'
@@ -103,12 +76,38 @@ const auth = useAuthStore()
 const enrollments = ref([])
 const loading = ref(true)
 
-const host = computed(() => isHost(auth.user?.role))
+/**
+ * 슬롯 원본 캐시 (courseId -> course)
+ *
+ * /api/enrollments/my 가 붙여 주는 course 요약은 두 가지가 빠져 있다.
+ *   - category 가 한글 라벨로 변환돼 온다 ("백엔드")
+ *   - instructorName 이 null 이다 (course-service 가 그 필드를 주지 않음)
+ * 그래서 슬롯 원본을 한 번씩 직접 조회해 채운다.
+ */
+const slots = ref({})
 
-function handleLogout() {
-  auth.logout()
-  router.push('/')
+function slotOf(item) {
+  return slots.value[item?.courseId] || item?.course || {}
 }
+
+async function fillSlots(list) {
+  const ids = [...new Set(list.map((e) => e?.courseId).filter((v) => v != null))]
+  const fetched = await Promise.all(
+    ids.map((id) =>
+      courseApi
+        .getById(id)
+        .then((res) => [id, res.data?.data ?? res.data])
+        .catch((e) => {
+          console.warn('[Enrollment] 슬롯 조회 실패:', id, e?.response?.status)
+          return null
+        })
+    )
+  )
+  slots.value = Object.fromEntries(fetched.filter(Boolean))
+  primeHosts(Object.values(slots.value))
+}
+
+const host = computed(() => isHost(auth.user?.role))
 
 onMounted(async () => {
   // 호스트는 이 페이지 접근 불가 → 마이페이지로 이동
@@ -129,7 +128,7 @@ onMounted(async () => {
     } else {
       enrollments.value = []
     }
-    primeHosts(enrollments.value.map((e) => e.course).filter(Boolean))
+    await fillSlots(enrollments.value)
   } catch (error) {
     console.error('[EnrollmentView] failed to load enrollments:', error)
     enrollments.value = []
@@ -154,62 +153,12 @@ onMounted(async () => {
   gap: 28px;
 }
 
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 
-.sidebar-section {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
-}
 
-.sidebar-label {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  padding: 8px 12px 4px;
-}
 
-.sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  transition: var(--transition);
-  background: none;
-  border: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  text-decoration: none;
-}
 
-.sidebar-item:hover {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
-}
 
-.sidebar-item.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  font-weight: 500;
-}
 
-.si-icon {
-  width: 19px;
-  height: 19px;
-  opacity: 0.85;
-}
 
 .main-content {
   min-width: 0;
@@ -367,6 +316,13 @@ onMounted(async () => {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* 다른 화면과 같은 지점에서 접힌다. 여기만 빠져 있어 창을 줄이면 레이아웃이 튀었다. */
+@media (max-width: 992px) {
+  .page-layout {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -23,14 +23,48 @@
         <div class="login-box fade-in-up">
           <router-link to="/" class="back-link">← 홈으로</router-link>
 
-          <!-- 로그인 영역 -->
+          <!-- 로그인 : 우리 화면에서 자격증명을 받아 인증 서버로 전달한다 -->
           <div v-if="!showRegister" class="section">
             <h3 class="section-title">로그인</h3>
             <p class="section-desc">PoCket 계정으로 로그인합니다.</p>
-            <button class="btn btn-primary btn-full" @click="handleOAuth">로그인</button>
+
+            <form class="form" @submit.prevent="handleLogin" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="login-email">이메일</label>
+                <input
+                  id="login-email"
+                  v-model.trim="loginForm.username"
+                  type="email"
+                  class="form-input"
+                  placeholder="user@example.com"
+                  autocomplete="username"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="login-password">비밀번호</label>
+                <input
+                  id="login-password"
+                  v-model="loginForm.password"
+                  type="password"
+                  class="form-input"
+                  placeholder="비밀번호"
+                  autocomplete="current-password"
+                  required
+                />
+              </div>
+
+              <div v-if="error" class="error-msg">{{ error }}</div>
+
+              <button type="submit" class="btn btn-primary btn-full" :disabled="loading">
+                <span v-if="loading">로그인 중...</span>
+                <span v-else>로그인</span>
+              </button>
+            </form>
+
             <div class="switch-link">
               계정이 없으신가요?
-              <button class="text-btn" @click="showRegister = true">회원가입</button>
+              <router-link to="/register" class="text-link">회원가입</router-link>
             </div>
           </div>
 
@@ -66,7 +100,7 @@
             </form>
             <div class="switch-link">
               이미 계정이 있으신가요?
-              <button class="text-btn" @click="showRegister = false">로그인</button>
+              <router-link to="/login" class="text-link">로그인</router-link>
             </div>
           </div>
 
@@ -77,24 +111,104 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth.js'
 import { authApi } from '@/api/auth.js'
 import { apiErrorMessage } from '@/domain/pocket.js'
 
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 
-const showRegister = ref(false)
+// /login 은 로그인, /register 는 회원가입. 같은 화면을 경로로 나눈다.
+const showRegister = computed(() => route.name === 'Register')
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
 
+const loginForm = ref({ username: '', password: '' })
 const registerForm = ref({ name: '', email: '', password: '', role: 'STUDENT' })
+
+const AUTH_SERVER_URL = import.meta.env.VITE_AUTH_SERVER_URL || 'http://localhost:8080'
 
 const features = ['AI 테스트베드 추천', '실증 신청·승인 관리', '실증 이력과 상호 평가']
 
-function handleOAuth() {
-  auth.redirectToLogin()
+/**
+ * 로그인
+ *
+ * 인증 서버의 폼 로그인(POST /login)에 자격증명을 그대로 전달해 세션을 만들고,
+ * 그 다음 평소처럼 Authorization Code 흐름으로 토큰을 받는다.
+ * 토큰 발급 경로는 바뀌지 않는다 — 자격증명 입력 화면만 우리 쪽으로 가져온 것이다.
+ *
+ * 비밀번호는 이 함수 밖으로 나가지 않는다. 저장하지도, 로그로 남기지도 않는다.
+ */
+/** 인증 서버가 살아 있는지 확인. /login 은 CORS 가 열려 있어 프로브로 쓸 수 있다. */
+async function authServerReachable() {
+  try {
+    await fetch(`${AUTH_SERVER_URL}/login`, { method: 'GET', cache: 'no-store' })
+    return true
+  } catch {
+    return false
+  }
+}
+
+function proceedToAuthorize() {
+  loginForm.value.password = ''   // 화면 상태에 남기지 않는다
+  auth.redirectToLogin()          // 세션이 생겼으니 인가 코드 발급으로
+}
+
+/**
+ * 로그인
+ *
+ * 인증 서버의 폼 로그인(POST /login)으로 세션을 만들고, 그 다음 평소처럼
+ * Authorization Code 흐름으로 토큰을 받는다. 토큰 발급 경로는 바뀌지 않는다.
+ *
+ * 성공/실패 판별이 까다로운 이유:
+ *   실패 → 302 → /login?error  (CORS 헤더 있음 → fetch 가 정상 종료)
+ *   성공 → 302 → /             (게이트웨이가 CORS 없이 401 → fetch 가 예외)
+ * 즉 "예외가 났다"가 곧 실패는 아니다. 서버 생존을 한 번 더 확인해
+ * 진짜 네트워크 오류와 구분한다.
+ *
+ * 비밀번호는 이 함수 밖으로 나가지 않는다. 저장하지도, 로그로 남기지도 않는다.
+ */
+async function handleLogin() {
+  error.value = ''
+
+  if (!loginForm.value.username || !loginForm.value.password) {
+    error.value = '이메일과 비밀번호를 입력해 주세요.'
+    return
+  }
+
+  loading.value = true
+  try {
+    const res = await fetch(`${AUTH_SERVER_URL}/login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        username: loginForm.value.username,
+        password: loginForm.value.password
+      })
+    })
+
+    if (res.url.includes('error') || res.status === 401 || res.status === 403) {
+      error.value = '이메일 또는 비밀번호가 올바르지 않습니다.'
+      return
+    }
+
+    proceedToAuthorize()
+  } catch (e) {
+    if (await authServerReachable()) {
+      // 서버는 멀쩡하다 → 성공 후 리다이렉트 도착지에서 CORS 로 막힌 것이다.
+      proceedToAuthorize()
+      return
+    }
+    console.error('[Login] 인증 서버에 연결할 수 없습니다:', e)
+    error.value = '인증 서버에 연결할 수 없습니다. 컨테이너 상태를 확인해 주세요.'
+  } finally {
+    loading.value = false
+  }
 }
 
 async function handleRegister() {
@@ -103,12 +217,9 @@ async function handleRegister() {
   loading.value = true
   try {
     await authApi.register(registerForm.value)
-    success.value = '회원가입 완료! 로그인 페이지로 이동합니다.'
+    success.value = '회원가입 완료! 로그인 화면으로 이동합니다.'
     registerForm.value = { name: '', email: '', password: '', role: 'STUDENT' }
-    setTimeout(() => {
-      showRegister.value = false
-      success.value = ''
-    }, 2000)
+    setTimeout(() => router.push('/login'), 1500)
   } catch (e) {
     error.value = apiErrorMessage(e, '회원가입에 실패했습니다.', {
       409: '이미 가입된 이메일입니다.'
@@ -191,6 +302,31 @@ async function handleRegister() {
   box-shadow: 0 0 0 4px rgba(80, 101, 192, 0.14);
 }
 .btn-full { width: 100%; padding: 15px; font-size: 16px; justify-content: center; margin-top: 4px; }
+
+.redirecting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 8px 0 28px;
+}
+.redirecting .section-title { margin: 4px 0 0; }
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.text-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
 
 .switch-link {
   text-align: center;
