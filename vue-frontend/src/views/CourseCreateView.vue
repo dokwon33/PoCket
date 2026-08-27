@@ -86,15 +86,15 @@
               </div>
             </div>
 
-            <div v-if="validationError" class="error-box">
+            <div v-show="validationError" class="error-box" role="alert">
               {{ validationError }}
             </div>
 
-            <div v-if="submitError" class="error-box">
+            <div v-show="submitError" class="error-box" role="alert">
               {{ submitError }}
             </div>
 
-            <div v-if="submitSuccess" class="success-box">
+            <div v-show="submitSuccess" class="success-box" role="status">
               {{ submitSuccess }}
             </div>
 

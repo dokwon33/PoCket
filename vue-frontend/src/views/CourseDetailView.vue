@@ -49,13 +49,12 @@
                 class="btn btn-primary btn-full"
                 @click="handlePrimaryAction"
                 :disabled="buttonDisabled"
-                :class="{ 'btn-disabled': buttonDisabled }"
               >
                 <span v-if="enrolling">처리 중...</span>
                 <span v-else>{{ buttonLabel }}</span>
               </button>
 
-              <div v-if="enrollError" class="error-msg">{{ enrollError }}</div>
+              <div v-show="enrollError" class="error-msg" role="alert">{{ enrollError }}</div>
 
               <p class="helper-text" v-if="helperText">
                 {{ helperText }}
@@ -457,10 +456,6 @@ watch(
   justify-content: center;
 }
 
-.btn-disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
 
 .enroll-info-list {
   list-style: none;
@@ -522,10 +517,6 @@ watch(
   animation: spin 0.8s linear infinite;
 }
 
-.badge-gray {
-  background: #f3f4f6;
-  color: #6b7280;
-}
 
 @keyframes spin {
   to {

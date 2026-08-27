@@ -145,7 +145,9 @@ const runCount = computed(() =>
   font-size: 11.5px;
   font-weight: 600;
 }
-.course-card.closed .card-thumb,
+/* 글자에 opacity 를 걸면 제목 3.52:1 로 AA 가 깨진다.
+   마감은 .closed-tag 가 이미 명시하므로 흐림은 썸네일에만 둔다. */
+.course-card.closed .card-thumb { opacity: 0.55; }
 .course-card.closed .card-title,
-.course-card.closed .fee { opacity: 0.55; }
+.course-card.closed .fee { color: var(--color-text-secondary); }
 </style>

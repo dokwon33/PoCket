@@ -1,5 +1,5 @@
 <template>
-  <ModalSheet :locked="saving" @close="close">
+  <ModalSheet labelledby="review-title" :locked="saving" @close="close">
       <h3 id="review-title" class="sheet-title">
         {{ isEdit ? '평가 수정' : '실증 평가 남기기' }}
       </h3>
@@ -24,7 +24,7 @@
         <span class="counter">{{ comment.length }}/500</span>
       </div>
 
-      <div v-if="error" class="error-msg">{{ error }}</div>
+      <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
 
       <div class="actions">
         <button type="button" class="btn btn-ghost" @click="close" :disabled="saving">취소</button>

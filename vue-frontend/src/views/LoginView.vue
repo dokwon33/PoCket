@@ -54,7 +54,7 @@
                 />
               </div>
 
-              <div v-if="error" class="error-msg">{{ error }}</div>
+              <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
 
               <button type="submit" class="btn btn-primary btn-full" :disabled="loading">
                 <span v-if="loading">로그인 중...</span>
@@ -73,26 +73,26 @@
             <h3 class="section-title">회원가입</h3>
             <form @submit.prevent="handleRegister" class="form">
               <div class="form-group">
-                <label class="form-label">이름</label>
-                <input v-model="registerForm.name" type="text" class="form-input" placeholder="홍길동" required />
+                <label class="form-label" for="reg-name">이름</label>
+                <input id="reg-name" v-model="registerForm.name" type="text" class="form-input" placeholder="홍길동" autocomplete="name" required />
               </div>
               <div class="form-group">
-                <label class="form-label">이메일</label>
-                <input v-model="registerForm.email" type="email" class="form-input" placeholder="user@example.com" required />
+                <label class="form-label" for="reg-email">이메일</label>
+                <input id="reg-email" v-model="registerForm.email" type="email" class="form-input" placeholder="user@example.com" autocomplete="email" required />
               </div>
               <div class="form-group">
-                <label class="form-label">비밀번호</label>
-                <input v-model="registerForm.password" type="password" class="form-input" placeholder="8자 이상" required />
+                <label class="form-label" for="reg-password">비밀번호</label>
+                <input id="reg-password" v-model="registerForm.password" type="password" class="form-input" placeholder="8자 이상" autocomplete="new-password" required />
               </div>
               <div class="form-group">
-                <label class="form-label">역할</label>
-                <select v-model="registerForm.role" class="form-input">
+                <label class="form-label" for="reg-role">역할</label>
+                <select id="reg-role" v-model="registerForm.role" class="form-input">
                   <option value="STUDENT">스타트업 — 실증할 제품이 있어요</option>
                   <option value="INSTRUCTOR">테스트베드 호스트 — 현장을 제공해요</option>
                 </select>
               </div>
-              <div v-if="error" class="error-msg">{{ error }}</div>
-              <div v-if="success" class="success-msg">{{ success }}</div>
+              <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
+              <div v-show="success" class="success-msg" role="status">{{ success }}</div>
               <button type="submit" class="btn btn-primary btn-full" :disabled="loading">
                 <span v-if="loading">가입 중...</span>
                 <span v-else>회원가입</span>

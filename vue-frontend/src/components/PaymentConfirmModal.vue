@@ -1,6 +1,6 @@
 <template>
-  <ModalSheet :locked="processing" @close="close">
-    <h3 class="sheet-title">실증비 결제</h3>
+  <ModalSheet labelledby="payment-title" :locked="processing" @close="close">
+    <h3 id="payment-title" class="sheet-title">실증비 결제</h3>
     <p class="sheet-desc">아래 내용으로 실증을 신청합니다.</p>
 
     <dl class="summary">
@@ -30,7 +30,7 @@
       거래번호만 발급됩니다.
     </p>
 
-    <div v-if="error" class="error-msg">{{ error }}</div>
+    <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
 
     <div class="actions">
       <button type="button" class="btn btn-ghost" @click="close" :disabled="processing">취소</button>

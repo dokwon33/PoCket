@@ -2,7 +2,7 @@
   <div class="callback-page">
     <div class="callback-box">
       <div class="spinner"></div>
-      <p>{{ message }}</p>
+      <p role="status" aria-live="polite">{{ message }}</p>
     </div>
   </div>
 </template>
