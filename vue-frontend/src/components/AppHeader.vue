@@ -52,15 +52,28 @@ function handleLogout() {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border);
+  /* 스크롤되는 콘텐츠가 뒤로 비쳐 흐른다 */
+  background: var(--glass-bg-thin);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  /* 아래 경계는 선이 아니라 빛 — 위쪽 하이라이트 + 아주 옅은 분리선 */
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 0 var(--glass-edge),
+    0 8px 24px rgba(36,34,73,0.05);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .app-header {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 .header-inner {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
-  height: 64px;
+  height: 68px;
   display: flex;
   align-items: center;
   gap: 32px;
@@ -77,10 +90,11 @@ function handleLogout() {
   object-fit: contain;
 }
 .logo-text {
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 19px;
   font-weight: 700;
   color: var(--color-text-primary);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.045em;
 }
 .nav-links {
   display: flex;
@@ -88,10 +102,11 @@ function handleLogout() {
   flex: 1;
 }
 .nav-link {
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--color-text-secondary);
   transition: var(--transition);
 }
@@ -107,12 +122,13 @@ function handleLogout() {
   margin-left: auto;
 }
 .btn-sm {
-  padding: 7px 16px;
-  font-size: 13px;
+  padding: 9px 18px;
+  font-size: 13.5px;
+  border-radius: var(--radius-pill);
 }
 .user-avatar {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--color-primary-light);
   color: var(--color-primary);

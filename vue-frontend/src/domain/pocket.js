@@ -34,14 +34,14 @@ export const TERMS = {
  * tint/ink 는 WCAG AA(4.5:1) 검증을 통과한 쌍이다. 임의로 바꾸지 말 것.
  * ------------------------------------------------------------------ */
 export const CATEGORIES = [
-  { code: 'BACKEND',      label: 'F&B',       icon: '☕', tint: '#FAEBE5', ink: '#BD430F' },
-  { code: 'FRONTEND',     label: '리테일',     icon: '🏬', tint: '#F8E7F0', ink: '#B6206B' },
-  { code: 'DEVOPS',       label: '물류',       icon: '📦', tint: '#EBE7F8', ink: '#4620B6' },
-  { code: 'DATA_SCIENCE', label: '헬스케어',   icon: '🏥', tint: '#E7F8F5', ink: '#157965' },
-  { code: 'MOBILE',       label: '오피스',     icon: '🏢', tint: '#E7F0F8', ink: '#206BB6' },
-  { code: 'SECURITY',     label: '보안·관제',  icon: '🛡️', tint: '#F2E9F7', ink: '#812BAB' },
-  { code: 'DATABASE',     label: '데이터센터', icon: '🖥️', tint: '#E7F4F8', ink: '#1A7393' },
-  { code: 'OTHER',        label: '기타',       icon: '📍', tint: '#F2F0EE', ink: '#7B6B47' }
+  { code: 'BACKEND',      label: 'F&B',       icon: 'cup', tint: '#FAEBE5', ink: '#BD430F' },
+  { code: 'FRONTEND',     label: '리테일',     icon: 'storefront', tint: '#F8E7F0', ink: '#B6206B' },
+  { code: 'DEVOPS',       label: '물류',       icon: 'package', tint: '#EBE7F8', ink: '#4620B6' },
+  { code: 'DATA_SCIENCE', label: '헬스케어',   icon: 'health', tint: '#E7F8F5', ink: '#157965' },
+  { code: 'MOBILE',       label: '오피스',     icon: 'office', tint: '#E7F0F8', ink: '#206BB6' },
+  { code: 'SECURITY',     label: '보안·관제',  icon: 'shield', tint: '#F2E9F7', ink: '#812BAB' },
+  { code: 'DATABASE',     label: '데이터센터', icon: 'server', tint: '#E7F4F8', ink: '#1A7393' },
+  { code: 'OTHER',        label: '기타',       icon: 'pin', tint: '#F2F0EE', ink: '#7B6B47' }
 ]
 
 const CATEGORY_BY_CODE = Object.fromEntries(CATEGORIES.map(c => [c.code, c]))
@@ -49,7 +49,7 @@ const CATEGORY_BY_CODE = Object.fromEntries(CATEGORIES.map(c => [c.code, c]))
 const UNKNOWN_CATEGORY = {
   code: '',
   label: '미분류',
-  icon: '📍',
+  icon: 'pin',
   tint: '#F2F0EE',
   ink: '#7B6B47'
 }

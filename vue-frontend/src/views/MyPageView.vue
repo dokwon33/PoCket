@@ -7,7 +7,7 @@
           <div class="sidebar-label">메뉴</div>
 
           <router-link to="/testbeds" class="sidebar-item">
-            <span class="si-icon">🧭</span> 테스트베드 탐색
+            <Icon name="compass" :size="19" class="si-icon" /> 테스트베드 탐색
           </router-link>
 
           <router-link
@@ -15,7 +15,7 @@
             to="/testbeds/new"
             class="sidebar-item"
           >
-            <span class="si-icon">➕</span> 실증 슬롯 등록
+            <Icon name="plus" :size="19" class="si-icon" /> 실증 슬롯 등록
           </router-link>
 
           <router-link
@@ -23,18 +23,18 @@
             to="/applications"
             class="sidebar-item"
           >
-            <span class="si-icon">✅</span> 내 실증 신청
+            <Icon name="check" :size="19" class="si-icon" /> 내 실증 신청
           </router-link>
 
           <router-link to="/mypage" class="sidebar-item active">
-            <span class="si-icon">⭐</span> 마이페이지
+            <Icon name="star" :size="19" class="si-icon" /> 마이페이지
           </router-link>
         </div>
 
         <div class="sidebar-section">
           <div class="sidebar-label">계정</div>
           <button class="sidebar-item sidebar-btn" @click="handleLogout">
-            <span class="si-icon">🚪</span> 로그아웃
+            <Icon name="logout" :size="19" class="si-icon" /> 로그아웃
           </button>
         </div>
       </aside>
@@ -73,6 +73,8 @@
           <div v-else-if="recommendations.length" class="recommend-grid fade-in">
             <CourseCard v-for="c in recommendations" :key="c.id" :course="c" />
           </div>
+
+          <SessionExpiredNotice v-else-if="authExpired" />
 
           <p v-else-if="recommendError" class="empty-text">
             {{ recommendError }}
@@ -159,6 +161,8 @@
             </div>
           </div>
 
+          <SessionExpiredNotice v-else-if="authExpired" />
+
           <p v-else-if="instructorError" class="empty-text">
             {{ instructorError }}
           </p>
@@ -176,7 +180,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import Icon from '@/components/Icon.vue'
 import CourseCard from '@/components/CourseCard.vue'
+import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
+import { authExpired } from '@/domain/session.js'
 import { useAuthStore } from '@/store/auth.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
@@ -187,6 +194,7 @@ import {
   roleLabel,
   recommendMessage as buildRecommendMessage
 } from '@/domain/pocket.js'
+import { primeHosts } from '@/domain/hosts.js'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -271,6 +279,7 @@ async function loadStudentRecommendations() {
       recommendations.value = []
       recommendMessage.value = ''
     }
+    primeHosts(recommendations.value)
   } catch (error) {
     console.error('[MyPage] failed to load recommendations:', error)
     recommendError.value = '현재 추천 테스트베드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
@@ -416,7 +425,9 @@ onMounted(async () => {
 }
 
 .si-icon {
-  font-size: 15px;
+  width: 19px;
+  height: 19px;
+  opacity: 0.85;
 }
 
 .main-content {
@@ -429,12 +440,14 @@ onMounted(async () => {
 .profile-card {
   display: flex;
   align-items: center;
-  gap: 20px;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  box-shadow: var(--shadow-sm);
+  gap: 22px;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  box-shadow: var(--shadow-glass);
 }
 
 .profile-avatar {
@@ -567,11 +580,13 @@ onMounted(async () => {
 }
 
 .summary-card {
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
-  box-shadow: var(--shadow-sm);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-glass);
 }
 
 .summary-label {
@@ -592,9 +607,12 @@ onMounted(async () => {
 }
 
 .instructor-course-card {
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass);
+  border-radius: var(--radius-xl);
   padding: 22px;
   box-shadow: var(--shadow-sm);
 }

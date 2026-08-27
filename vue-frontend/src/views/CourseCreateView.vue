@@ -13,7 +13,7 @@
             class="sidebar-item"
             :class="{ active: $route.path === '/testbeds' }"
           >
-            <span class="si-icon">🧭</span> 테스트베드 탐색
+            <Icon name="compass" :size="19" class="si-icon" /> 테스트베드 탐색
           </router-link>
 
           <router-link
@@ -21,21 +21,21 @@
             class="sidebar-item"
             :class="{ active: $route.path === '/testbeds/new' }"
           >
-            <span class="si-icon">➕</span> 실증 슬롯 등록
+            <Icon name="plus" :size="19" class="si-icon" /> 실증 슬롯 등록
           </router-link>
 
           <router-link to="/mypage" class="sidebar-item">
-            <span class="si-icon">⭐</span> 마이페이지
+            <Icon name="star" :size="19" class="si-icon" /> 마이페이지
           </router-link>
         </div>
 
         <div class="sidebar-section">
           <div class="sidebar-label">계정</div>
           <router-link to="/mypage" class="sidebar-item">
-            <span class="si-icon">👤</span> 마이페이지
+            <Icon name="user" :size="19" class="si-icon" /> 마이페이지
           </router-link>
           <button class="sidebar-item sidebar-btn" @click="handleLogout">
-            <span class="si-icon">🚪</span> 로그아웃
+            <Icon name="logout" :size="19" class="si-icon" /> 로그아웃
           </button>
         </div>
       </aside>
@@ -136,6 +136,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import Icon from '@/components/Icon.vue'
 import { courseApi } from '@/api/course.js'
 import { useAuthStore } from '@/store/auth.js'
 import { CATEGORIES, isHost, apiErrorMessage } from '@/domain/pocket.js'
@@ -313,7 +314,9 @@ async function handleSubmit() {
 }
 
 .si-icon {
-  font-size: 15px;
+  width: 19px;
+  height: 19px;
+  opacity: 0.85;
 }
 
 .sidebar-btn {
@@ -342,9 +345,12 @@ async function handleSubmit() {
 }
 
 .form-card {
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass);
+  border-radius: var(--radius-xl);
   padding: 24px;
   box-shadow: var(--shadow-sm);
 }

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth.js'
+import { clearAuthExpired } from '@/domain/session.js'
 
 const AUTH_SERVER_URL = import.meta.env.VITE_AUTH_SERVER_URL || 'http://localhost:8080'
 
@@ -13,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function setToken(token) {
     accessToken.value = token
+    clearAuthExpired()
     sessionStorage.setItem('access_token', token)
   }
 

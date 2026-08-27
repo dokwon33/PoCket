@@ -38,6 +38,7 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { portalActive } from '@/domain/intro.js'
 
 const STORAGE_KEY = 'pocket.portal.seen'
 
@@ -79,6 +80,7 @@ onMounted(() => {
 
   markSeen()
   mounted.value = true
+  portalActive.value = true
   document.body.style.overflow = 'hidden'
 
   // 모션을 줄이도록 설정한 사용자에게는 문을 흔들지 않고 바로 걷는다
@@ -86,6 +88,7 @@ onMounted(() => {
   if (reduced) {
     later(() => {
       mounted.value = false
+      portalActive.value = false
       unlockScroll()
     }, 900)
     return
@@ -95,6 +98,7 @@ onMounted(() => {
   later(() => { opening.value = true }, HOLD + BADGE_OUT)
   later(() => {
     mounted.value = false
+    portalActive.value = false
     unlockScroll()
   }, HOLD + BADGE_OUT + DOOR_OPEN)
 })
@@ -102,6 +106,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   timers.forEach(clearTimeout)
   timers = []
+  portalActive.value = false
   unlockScroll()
 })
 </script>

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { courseApi } from '@/api/course.js'
 import { CATEGORIES } from '@/domain/pocket.js'
+import { primeHosts } from '@/domain/hosts.js'
 
 export const ALL_CATEGORIES = 'ALL'
 
@@ -45,6 +46,7 @@ export const useCourseStore = defineStore('course', () => {
     try {
       const res = await courseApi.getAll()
       courses.value = unwrap(res.data).map(normalizeCourse)
+      primeHosts(courses.value)
     } catch (e) {
       console.error('[CourseStore] fetchCourses failed:', e)
       error.value = '테스트베드 목록을 불러오지 못했습니다.'
@@ -66,6 +68,7 @@ export const useCourseStore = defineStore('course', () => {
           : res.data
 
       selectedCourse.value = normalizeCourse(raw)
+      primeHosts([selectedCourse.value])
     } catch (e) {
       console.error('[CourseStore] fetchCourse failed:', e)
       error.value = '실증 슬롯 정보를 불러오지 못했습니다.'
