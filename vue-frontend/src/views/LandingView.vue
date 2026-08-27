@@ -449,4 +449,18 @@ const features = [
 }
 .footer-logo img { width: 28px; height: 28px; }
 .footer-copy { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+/* 투명도를 줄이도록 설정한 사용자에게는 유리를 불투명하게 —
+   가드가 없으면 설정을 켜도 blur 와 반투명이 그대로 남는다. */
+@media (prefers-reduced-transparency: reduce) {
+  .hero-badge,
+  .hero-stats,
+  .course-card-landing,
+  .feature-card {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border);
+  }
+}
 </style>
