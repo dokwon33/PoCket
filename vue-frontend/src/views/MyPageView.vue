@@ -2,42 +2,7 @@
   <div class="page-wrapper">
     <AppHeader />
     <div class="page-layout">
-      <aside class="sidebar">
-        <div class="sidebar-section">
-          <div class="sidebar-label">메뉴</div>
-
-          <router-link to="/testbeds" class="sidebar-item">
-            <Icon name="compass" :size="19" class="si-icon" /> 테스트베드 탐색
-          </router-link>
-
-          <router-link
-            v-if="host"
-            to="/testbeds/new"
-            class="sidebar-item"
-          >
-            <Icon name="plus" :size="19" class="si-icon" /> 실증 슬롯 등록
-          </router-link>
-
-          <router-link
-            v-if="!host"
-            to="/applications"
-            class="sidebar-item"
-          >
-            <Icon name="check" :size="19" class="si-icon" /> 내 실증 신청
-          </router-link>
-
-          <router-link to="/mypage" class="sidebar-item active">
-            <Icon name="star" :size="19" class="si-icon" /> 마이페이지
-          </router-link>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-label">계정</div>
-          <button class="sidebar-item sidebar-btn" @click="handleLogout">
-            <Icon name="logout" :size="19" class="si-icon" /> 로그아웃
-          </button>
-        </div>
-      </aside>
+      <AppSidebar />
 
       <main class="main-content">
         <!-- 프로필 카드 -->
@@ -178,9 +143,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
-import Icon from '@/components/Icon.vue'
+import AppSidebar from '@/components/AppSidebar.vue'
 import CourseCard from '@/components/CourseCard.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
@@ -196,7 +160,6 @@ import {
 } from '@/domain/pocket.js'
 import { primeHosts } from '@/domain/hosts.js'
 
-const router = useRouter()
 const auth = useAuthStore()
 
 const host = computed(() => isHost(auth.user?.role))
@@ -218,10 +181,6 @@ const totalRunCount = computed(() =>
     return sum + (Number.isNaN(count) ? 0 : count)
   }, 0)
 )
-
-function handleLogout() {
-  auth.logout()
-}
 
 function formatPrice(price) {
   const value = Number(price ?? 0)
@@ -372,62 +331,12 @@ onMounted(async () => {
   gap: 28px;
 }
 
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 
-.sidebar-section {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
-}
 
-.sidebar-label {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  padding: 8px 12px 4px;
-}
 
-.sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  transition: var(--transition);
-  background: none;
-  border: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  text-decoration: none;
-}
 
-.sidebar-item:hover {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
-}
 
-.sidebar-item.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  font-weight: 500;
-}
 
-.si-icon {
-  width: 19px;
-  height: 19px;
-  opacity: 0.85;
-}
 
 .main-content {
   min-width: 0;

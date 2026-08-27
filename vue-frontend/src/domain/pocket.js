@@ -46,6 +46,19 @@ export const CATEGORIES = [
 
 const CATEGORY_BY_CODE = Object.fromEntries(CATEGORIES.map(c => [c.code, c]))
 
+/**
+ * enrollment-service 는 응답 전에 enum 을 한글로 바꿔서 보낸다.
+ *   case "BACKEND" -> "백엔드"  (DATA_SCIENCE 등은 default 로 통과)
+ * 백엔드를 고칠 수 없으므로 그 값도 원래 코드로 되돌려 받아준다.
+ */
+const LEGACY_LABEL_TO_CODE = {
+  '백엔드': 'BACKEND',
+  '프론트엔드': 'FRONTEND',
+  'DEVOPS': 'DEVOPS',
+  '데이터': 'DATA_SCIENCE',
+  'AI': 'DATA_SCIENCE'
+}
+
 const UNKNOWN_CATEGORY = {
   code: '',
   label: '미분류',
@@ -57,7 +70,13 @@ const UNKNOWN_CATEGORY = {
 /** enum 코드로 산업군 정보를 찾는다. 모르는 값이 와도 화면이 깨지지 않도록 폴백을 준다. */
 export function category(code) {
   if (!code) return UNKNOWN_CATEGORY
-  return CATEGORY_BY_CODE[String(code).toUpperCase()] || UNKNOWN_CATEGORY
+  const raw = String(code)
+  return (
+    CATEGORY_BY_CODE[raw.toUpperCase()] ||
+    CATEGORY_BY_CODE[LEGACY_LABEL_TO_CODE[raw]] ||
+    CATEGORY_BY_CODE[LEGACY_LABEL_TO_CODE[raw.toUpperCase()]] ||
+    UNKNOWN_CATEGORY
+  )
 }
 
 export function categoryLabel(code) {
