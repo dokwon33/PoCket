@@ -519,7 +519,7 @@ DB는 `pocket_mariadb_data` 볼륨에 저장되므로 **실행한 사람의 PC�
 | `/login` | 로그인 | 비로그인 전용 |
 | `/register` | 회원가입 | 비로그인 전용 |
 | `/callback` | OAuth2 콜백 | 공개 |
-| `/testbeds` | 테스트베드 목록 | 로그인 필요 |
+| `/testbeds` | 테스트베드 목록 (신청 여부를 카드에서 구분) | 로그인 필요 |
 | `/testbeds/new` | 실증 슬롯 등록 | 호스트 전용 |
 | `/testbeds/:id` | 슬롯 상세 | 로그인 필요 |
 | `/applications` | 내 실증 신청 | 로그인 필요 |
@@ -540,7 +540,7 @@ DB는 `pocket_mariadb_data` 볼륨에 저장되므로 **실행한 사람의 PC�
 |---|---|---|---|
 | 1 | 진입 | `/` | 랜딩, 산업군별 카드 |
 | 2 | 로그인 | `/login` | `student@lecture.com` 으로 로그인 |
-| 3 | 슬롯 탐색 | `/testbeds` | 시드 95건이 산업군 필터로 걸러짐 |
+| 3 | 슬롯 탐색 | `/testbeds` | 시드 95건이 산업군 필터로 걸러짐. 이미 신청한 슬롯은 카드에 상태 배지 |
 | 4 | 슬롯 상세 | `/testbeds/:id` | 환경 스펙, 기간, 실증비 |
 | 5 | 실증 신청 | `/testbeds/:id` | 결제 확인 시트를 거쳐 신청, 직후 상태는 `PENDING` |
 | 6 | 확정 확인 | `/testbeds/:id` · `/applications` | `확정 처리 중` 에서 몇 초 뒤 자동으로 `ACTIVE` |
