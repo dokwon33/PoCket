@@ -18,6 +18,34 @@ function idOf(course) {
   return course?.instructorId ?? course?.instructor_id ?? null
 }
 
+/** 사용자 id 로 이름을 한 번에 받아 캐시한다 (호스트 외 평가자 이름에도 쓴다) */
+export async function primeUsers(ids) {
+  const wanted = [...new Set((ids || []).filter((v) => v != null))].filter(
+    (id) => !(id in names) && !inflight.has(id)
+  )
+  if (!wanted.length) return
+
+  await Promise.all(
+    wanted.map((id) => {
+      const p = userApi
+        .getById(id)
+        .then((res) => {
+          const body = res.data?.data ?? res.data
+          if (body?.name) names[id] = body.name
+        })
+        .catch((e) => console.warn('[PoCket] 사용자 이름 조회 실패:', id, e?.response?.status))
+        .finally(() => inflight.delete(id))
+      inflight.set(id, p)
+      return p
+    })
+  )
+}
+
+/** 캐시된 이름. 없으면 null (호출부가 대체 문구를 정한다) */
+export function userName(id) {
+  return names[id] ?? null
+}
+
 /** 캐시에 있으면 이름, 없으면 식별자로 대체. 절대 빈 문자열을 내지 않는다. */
 export function hostName(course) {
   // 백엔드가 나중에 이름을 실어 보내면 그것을 우선 쓴다

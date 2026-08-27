@@ -103,6 +103,28 @@ export function roleLabel(role) {
 
 export const isHost = (role) => role === 'INSTRUCTOR'
 
+/** review-service 의 reviewerRole 은 User.Role 과 값이 다르다 (HOST / STARTUP) */
+export function reviewerRoleLabel(role) {
+  return role === 'HOST' ? TERMS.hostShort : TERMS.startup
+}
+
+/**
+ * 이름 가운데 가리기
+ *
+ *   노윤성   -> 노*성
+ *   김강    -> 김*
+ *   홍길동전 -> 홍**전
+ *
+ * 평가는 공개되는 정보라 전체 이름을 그대로 노출하지 않는다.
+ */
+export function maskName(name) {
+  const s = String(name ?? '').trim()
+  if (!s) return '익명'
+  if (s.length === 1) return s
+  if (s.length === 2) return `${s[0]}*`
+  return `${s[0]}${'*'.repeat(s.length - 2)}${s[s.length - 1]}`
+}
+
 /* ------------------------------------------------------------------ *
  * 상태 — Enrollment / Payment / Course
  *

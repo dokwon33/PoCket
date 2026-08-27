@@ -1,9 +1,7 @@
 <template>
   <router-link :to="`/testbeds/${slot.id}`" class="course-card">
     <!-- 산업군 타일 -->
-    <div class="card-thumb" :style="{ background: cat.tint, opacity: 0.9 }">
-      <Icon class="thumb-icon" :name="cat.icon" :size="42" :stroke-width="1.4" :style="{ color: cat.ink }" />
-    </div>
+    <SlotThumb class="card-thumb" :course="slot" :icon-size="42" />
 
     <!-- 내용 -->
     <div class="card-body">
@@ -22,7 +20,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import Icon from '@/components/Icon.vue'
+import SlotThumb from '@/components/SlotThumb.vue'
 import { category, categoryStyle, formatFee } from '@/domain/pocket.js'
 import { hostName as resolveHost } from '@/domain/hosts.js'
 

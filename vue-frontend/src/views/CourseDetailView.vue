@@ -26,14 +26,21 @@
                 <span class="meta-label">모집 상태</span>
                 <span class="meta-value">{{ courseStatus(course.status).label }}</span>
               </div>
+              <div class="meta-item">
+                <span class="meta-label">호스트 평판</span>
+                <span v-if="reputation?.reviewCount" class="meta-value meta-rating">
+                  <StarRating :model-value="reputation.averageRating || 0" readonly :size="14" />
+                  {{ (reputation.averageRating || 0).toFixed(1) }}
+                  <span class="meta-sub">({{ reputation.reviewCount }}건)</span>
+                </span>
+                <span v-else class="meta-value meta-muted">아직 평가 없음</span>
+              </div>
             </div>
           </div>
 
           <!-- 우측 결제/신청 카드 -->
           <div class="enroll-card fade-in">
-            <div class="enroll-thumb" :style="{ background: cat.tint }">
-              <Icon class="enroll-thumb-icon" :name="cat.icon" :size="52" :stroke-width="1.3" :style="{ color: cat.ink }" />
-            </div>
+            <SlotThumb class="enroll-thumb" :course="course" :icon-size="52" />
 
             <div class="enroll-body">
               <div class="enroll-price">₩{{ displayPrice }}</div>
@@ -74,6 +81,16 @@
     <div v-else class="loading-center">
       <p class="empty-text">실증 슬롯 정보를 불러오지 못했습니다.</p>
     </div>
+
+    <PaymentConfirmModal
+      v-if="confirmOpen && course"
+      :slot="{ title: course.title, category: course.category, price: course.price }"
+      :host-name="displayHostName"
+      :processing="enrolling"
+      :error="enrollError"
+      @close="closeConfirm"
+      @confirm="confirmAndEnroll"
+    />
   </div>
 </template>
 
@@ -81,7 +98,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
-import Icon from '@/components/Icon.vue'
+import SlotThumb from '@/components/SlotThumb.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { useCourseStore } from '@/store/course.js'
@@ -89,6 +106,9 @@ import { enrollmentApi } from '@/api/enrollment.js'
 import { useAuthStore } from '@/store/auth.js'
 import { category, categoryStyle, courseStatus, isHost, formatFee, apiErrorMessage } from '@/domain/pocket.js'
 import { hostName as resolveHost } from '@/domain/hosts.js'
+import StarRating from '@/components/StarRating.vue'
+import { reviewApi } from '@/api/review.js'
+import PaymentConfirmModal from '@/components/PaymentConfirmModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,6 +133,20 @@ const displayRunCount = computed(() =>
 )
 
 const displayPrice = computed(() => formatFee(course.value?.price))
+
+/* 호스트 평판 — 공개 API 라 로그인 없이도 조회된다 */
+const reputation = ref(null)
+
+async function loadReputation(instructorId) {
+  reputation.value = null
+  if (!instructorId) return
+  try {
+    const res = await reviewApi.reputation(instructorId)
+    reputation.value = res.data
+  } catch (e) {
+    console.warn('[CourseDetail] 평판 조회 실패:', e?.response?.status)
+  }
+}
 
 const buttonLabel = computed(() => {
   if (host.value) return '호스트 계정은 신청 불가'
@@ -174,33 +208,43 @@ async function loadEnrollmentStatus() {
   }
 }
 
-async function handlePrimaryAction() {
+/** 신청 버튼 → 곧장 신청하지 않고 결제 확인 단계를 먼저 띄운다 */
+function handlePrimaryAction() {
   enrollError.value = ''
+
+  if (host.value) {
+    enrollError.value = '호스트 계정은 실증 슬롯을 신청할 수 없습니다.'
+    return
+  }
+  if (enrollmentStatus.value === 'ACTIVE') {
+    router.push('/applications')
+    return
+  }
+  if (enrollmentStatus.value === 'PENDING') return
 
   if (!course.value?.id) {
     enrollError.value = '실증 슬롯 정보가 올바르지 않습니다.'
     return
   }
 
-  if (host.value) {
-    enrollError.value = '호스트 계정은 실증 슬롯을 신청할 수 없습니다.'
-    return
-  }
+  confirmOpen.value = true
+}
 
-  if (enrollmentStatus.value === 'ACTIVE') {
-    router.push('/applications')
-    return
-  }
+const confirmOpen = ref(false)
 
-  if (enrollmentStatus.value === 'PENDING') {
-    return
-  }
+function closeConfirm() {
+  if (!enrolling.value) confirmOpen.value = false
+}
+
+async function confirmAndEnroll() {
+  enrollError.value = ''
 
   enrolling.value = true
 
   try {
     await enrollmentApi.enroll(course.value.id)
     enrollmentStatus.value = 'PENDING'
+    confirmOpen.value = false
   } catch (e) {
     console.error('[CourseDetail] enroll failed:', e)
     enrollError.value = apiErrorMessage(e, '실증 신청에 실패했습니다.', {
@@ -213,6 +257,7 @@ async function handlePrimaryAction() {
 
 onMounted(async () => {
   await courseStore.fetchCourse(route.params.id)
+  loadReputation(courseStore.selectedCourse?.instructorId)
   console.log('[CourseDetail] selectedCourse =', courseStore.selectedCourse)
   await loadEnrollmentStatus()
 })
@@ -223,6 +268,7 @@ watch(
     console.log('[CourseDetail] selectedCourse changed =', value)
     if (value?.id) {
       await loadEnrollmentStatus()
+      loadReputation(value.instructorId)
     }
   },
   { deep: true }
@@ -294,6 +340,23 @@ watch(
 .meta-item + .meta-item { border-left: 1px solid var(--glass-edge); }
 .meta-label {
   font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.meta-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.meta-sub {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.meta-muted {
+  font-family: var(--font-sans);
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-text-muted);
 }
