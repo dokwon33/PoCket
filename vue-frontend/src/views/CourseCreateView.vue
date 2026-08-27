@@ -86,15 +86,15 @@
               </div>
             </div>
 
-            <div v-if="validationError" class="error-box">
+            <div v-show="validationError" class="error-box" role="alert">
               {{ validationError }}
             </div>
 
-            <div v-if="submitError" class="error-box">
+            <div v-show="submitError" class="error-box" role="alert">
               {{ submitError }}
             </div>
 
-            <div v-if="submitSuccess" class="success-box">
+            <div v-show="submitSuccess" class="success-box" role="status">
               {{ submitSuccess }}
             </div>
 
@@ -385,6 +385,17 @@ async function handleSubmit() {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 투명도를 줄이도록 설정한 사용자에게는 유리를 불투명하게 —
+   가드가 없으면 설정을 켜도 blur 와 반투명이 그대로 남는다. */
+@media (prefers-reduced-transparency: reduce) {
+  .form-card {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border);
   }
 }
 </style>

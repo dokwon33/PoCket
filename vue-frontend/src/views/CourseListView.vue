@@ -54,6 +54,14 @@
         <!-- 인증 만료 : "데이터 없음" 과 구분해서 말한다 -->
         <SessionExpiredNotice v-else-if="authExpired" />
 
+        <!-- 요청 실패도 "데이터 없음" 과 구분한다 -->
+        <LoadFailedNotice
+          v-else-if="error"
+          title="테스트베드 목록을 불러오지 못했습니다"
+          :message="error"
+          @retry="courseStore.fetchCourses()"
+        />
+
         <!-- 슬롯 그리드 -->
         <div v-else-if="filteredSlots.length" class="course-grid fade-in">
           <CourseCard
@@ -87,6 +95,7 @@ import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import CourseCard from '@/components/CourseCard.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
+import LoadFailedNotice from '@/components/LoadFailedNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { useCourseStore, ALL_CATEGORIES } from '@/store/course.js'
 import { useAuthStore } from '@/store/auth.js'
@@ -97,7 +106,7 @@ const auth = useAuthStore()
 
 // storeToRefs 로 꺼내야 반응성이 유지된다.
 // 그냥 구조분해하면 loading 이 최초 값(false)으로 고정돼 스켈레톤이 뜨지 않는다.
-const { loading, selectedCategory, courses } = storeToRefs(courseStore)
+const { loading, error, selectedCategory, courses } = storeToRefs(courseStore)
 const categoryFilters = courseStore.categoryFilters
 
 const host = computed(() => isHost(auth.user?.role))
@@ -199,7 +208,7 @@ onMounted(() => {
 }
 
 .filter-chip:hover {
-  color: var(--color-primary);
+  color: var(--color-link);
   transform: translateY(-1px);
   box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-md);
 }
@@ -296,6 +305,17 @@ onMounted(() => {
   .content-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* 투명도를 줄이도록 설정한 사용자에게는 유리를 불투명하게 —
+   가드가 없으면 설정을 켜도 blur 와 반투명이 그대로 남는다. */
+@media (prefers-reduced-transparency: reduce) {
+  .filter-chip {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border);
   }
 }
 </style>

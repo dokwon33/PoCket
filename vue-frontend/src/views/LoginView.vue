@@ -54,7 +54,7 @@
                 />
               </div>
 
-              <div v-if="error" class="error-msg">{{ error }}</div>
+              <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
 
               <button type="submit" class="btn btn-primary btn-full" :disabled="loading">
                 <span v-if="loading">로그인 중...</span>
@@ -73,26 +73,26 @@
             <h3 class="section-title">회원가입</h3>
             <form @submit.prevent="handleRegister" class="form">
               <div class="form-group">
-                <label class="form-label">이름</label>
-                <input v-model="registerForm.name" type="text" class="form-input" placeholder="홍길동" required />
+                <label class="form-label" for="reg-name">이름</label>
+                <input id="reg-name" v-model="registerForm.name" type="text" class="form-input" placeholder="홍길동" autocomplete="name" required />
               </div>
               <div class="form-group">
-                <label class="form-label">이메일</label>
-                <input v-model="registerForm.email" type="email" class="form-input" placeholder="user@example.com" required />
+                <label class="form-label" for="reg-email">이메일</label>
+                <input id="reg-email" v-model="registerForm.email" type="email" class="form-input" placeholder="user@example.com" autocomplete="email" required />
               </div>
               <div class="form-group">
-                <label class="form-label">비밀번호</label>
-                <input v-model="registerForm.password" type="password" class="form-input" placeholder="8자 이상" required />
+                <label class="form-label" for="reg-password">비밀번호</label>
+                <input id="reg-password" v-model="registerForm.password" type="password" class="form-input" placeholder="8자 이상" autocomplete="new-password" required />
               </div>
               <div class="form-group">
-                <label class="form-label">역할</label>
-                <select v-model="registerForm.role" class="form-input">
+                <label class="form-label" for="reg-role">역할</label>
+                <select id="reg-role" v-model="registerForm.role" class="form-input">
                   <option value="STUDENT">스타트업 — 실증할 제품이 있어요</option>
                   <option value="INSTRUCTOR">테스트베드 호스트 — 현장을 제공해요</option>
                 </select>
               </div>
-              <div v-if="error" class="error-msg">{{ error }}</div>
-              <div v-if="success" class="success-msg">{{ success }}</div>
+              <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
+              <div v-show="success" class="success-msg" role="status">{{ success }}</div>
               <button type="submit" class="btn btn-primary btn-full" :disabled="loading">
                 <span v-if="loading">가입 중...</span>
                 <span v-else>회원가입</span>
@@ -119,6 +119,7 @@ import { apiErrorMessage } from '@/domain/pocket.js'
 
 const auth = useAuthStore()
 const route = useRoute()
+const REDIRECT_KEY = 'pocket.login.redirect'
 const router = useRouter()
 
 // /login 은 로그인, /register 는 회원가입. 같은 화면을 경로로 나눈다.
@@ -132,7 +133,7 @@ const registerForm = ref({ name: '', email: '', password: '', role: 'STUDENT' })
 
 const AUTH_SERVER_URL = import.meta.env.VITE_AUTH_SERVER_URL || 'http://localhost:8080'
 
-const features = ['AI 테스트베드 추천', '실증 신청·승인 관리', '실증 이력과 상호 평가']
+const features = ['AI 테스트베드 추천', '실증 신청·결제·확정', '실증 이력과 상호 평가']
 
 /**
  * 로그인
@@ -155,6 +156,14 @@ async function authServerReachable() {
 
 function proceedToAuthorize() {
   loginForm.value.password = ''   // 화면 상태에 남기지 않는다
+
+  // 인가 코드 발급을 위해 인증 서버로 나갔다 오면 라우터 쿼리가 사라진다.
+  // 원래 가려던 곳을 왕복 동안 보관해 두고 CallbackView 가 꺼내 쓴다.
+  const back = route.query.redirect
+  if (typeof back === 'string' && back.startsWith('/')) {
+    sessionStorage.setItem(REDIRECT_KEY, back)
+  }
+
   auth.redirectToLogin()          // 세션이 생겼으니 인가 코드 발급으로
 }
 
@@ -276,7 +285,7 @@ async function handleRegister() {
   margin-bottom: 32px;
   transition: var(--transition);
 }
-.back-link:hover { color: var(--color-primary); }
+.back-link:hover { color: var(--color-link); }
 
 .section { display: flex; flex-direction: column; gap: 16px; }
 .section-title { font-size: 22px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 4px; }
@@ -323,7 +332,7 @@ async function handleRegister() {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .text-link {
-  color: var(--color-primary);
+  color: var(--color-link);
   font-weight: 600;
   text-decoration: underline;
 }
@@ -337,7 +346,7 @@ async function handleRegister() {
 .text-btn {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-link);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -359,5 +368,22 @@ async function handleRegister() {
   border-radius: var(--radius-md);
   font-size: 13px;
   color: #16a34a;
+}
+
+/* ── 반응형 ──────────────────────────────────────────────────
+   이 화면에도 폭 미디어쿼리가 없었다. 360/390px 에서 scrollWidth 가 456 이라
+   좌우 2단 그리드가 그대로 유지되며 밖으로 밀려 나갔다(범인: .login-right).
+   로그인은 비로그인 방문자가 처음 만나는 화면이라 폰에서 깨지면 안 된다. */
+@media (max-width: 860px) {
+  .login-layout { grid-template-columns: 1fr; min-height: auto; }
+  /* 좌측 브랜드 패널은 소개용이다. 좁은 화면에서는 로그인 폼이 주인공이다. */
+  .login-left { padding: 32px 24px; gap: 24px; }
+  .brand-content h2 { font-size: 24px; }
+  .login-right { padding: 40px 24px; }
+}
+
+@media (max-width: 480px) {
+  .login-left { display: none; }
+  .login-right { padding: 32px 20px; min-height: 100vh; }
 }
 </style>

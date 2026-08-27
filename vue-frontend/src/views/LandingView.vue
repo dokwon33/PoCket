@@ -7,12 +7,11 @@
     <section class="hero">
       <div class="hero-inner">
         <div class="hero-content fade-in-up">
-          <span class="hero-badge">B2B 실증 테스트베드 매칭</span>
+          <span class="hero-badge">PoCket 테스트베드</span>
           <h1 class="hero-title">제품을 검증할 현장,<br>더 빠르게 찾으세요</h1>
-          <p class="hero-desc">카페·물류센터·병원 등 실제 현장이 등록한 실증 슬롯을 AI가 우리 제품에 맞춰 추천합니다.</p>
           <div class="hero-actions">
-            <router-link to="/register" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
-            <router-link to="/testbeds" class="btn btn-outline btn-lg">테스트베드 둘러보기</router-link>
+            <router-link to="/testbeds" class="btn btn-primary btn-lg">현장 둘러보기</router-link>
+            <router-link to="/register" class="btn btn-outline btn-lg">우리 현장 등록하기</router-link>
           </div>
           <div class="hero-stats">
             <div v-for="(s, i) in stats" :key="s.label" class="stat">
@@ -32,24 +31,34 @@
     <!-- 인기 테스트베드 -->
     <section class="popular-section">
       <div class="section-inner">
-        <div class="section-header">
-          <h2 class="section-title">인기 테스트베드</h2>
+        <div class="section-header" v-reveal>
+          <h2 class="section-title">지금 열려 있는 현장</h2>
           <router-link to="/testbeds" class="section-link">전체 보기 →</router-link>
         </div>
         <div class="course-grid">
-          <div v-for="slot in featuredSlots" :key="slot.id" class="course-card-landing">
-            <div class="card-thumb" :style="{ background: category(slot.category).tint }">
-              <Icon class="thumb-icon" :name="category(slot.category).icon" :size="42" :stroke-width="1.4" :style="{ color: category(slot.category).ink }" />
+          <!-- 카드가 hover 로 떠오르니 누를 수 있다고 읽힌다. 실제로 누르면
+               로그인 상태에서는 슬롯 상세로, 아니면 로그인을 거쳐 그리로 간다. -->
+          <component
+            :is="linkable ? 'router-link' : 'a'"
+            v-for="(slot, i) in featuredSlots"
+            :key="slot.id"
+            v-reveal="{ delay: Math.min(i, 5) * 60 }"
+            :to="linkable ? `/testbeds/${slot.id}` : undefined"
+            :href="linkable ? undefined : '/login?redirect=/testbeds'"
+            class="course-card-landing"
+          >
+            <div class="card-thumb">
+              <SlotThumb :course="slot" :icon-size="42" />
             </div>
             <div class="card-body">
               <span class="badge" :style="categoryStyle(slot.category)">{{ categoryLabel(slot.category) }}</span>
               <h3 class="card-title">{{ slot.title }}</h3>
               <div class="card-meta">
-                <span class="instructor">{{ slot.host }}</span>
+                <span class="instructor">{{ hostName(slot) }}</span>
                 <span class="price">₩{{ formatFee(slot.price) }}</span>
               </div>
             </div>
-          </div>
+          </component>
         </div>
       </div>
     </section>
@@ -57,9 +66,14 @@
     <!-- 특징 섹션 -->
     <section class="features-section">
       <div class="section-inner">
-        <h2 class="section-title center">왜 PoCket인가요?</h2>
+        <h2 class="section-title center" v-reveal>현장을 구하는 데 몇 달을 쓰지 않도록</h2>
         <div class="features-grid">
-          <div v-for="f in features" :key="f.title" class="feature-card">
+          <div
+            v-for="(f, i) in features"
+            :key="f.title"
+            class="feature-card"
+            v-reveal="{ delay: i * 60 }"
+          >
             <div class="feature-icon"><Icon :name="f.icon" :size="30" :stroke-width="1.5" /></div>
             <h3 class="feature-title">{{ f.title }}</h3>
             <p class="feature-desc">{{ f.desc }}</p>
@@ -70,10 +84,10 @@
 
     <!-- CTA -->
     <section class="cta-section">
-      <div class="cta-inner">
-        <h2>지금 바로 시작하세요</h2>
-        <p>수백 곳의 현장과 스타트업이 PoCket에서 실증을 연결하고 있습니다.</p>
-        <router-link to="/register" class="btn btn-primary btn-lg">무료로 시작하기</router-link>
+      <div class="cta-inner" v-reveal="{ y: 24 }">
+        <h2>검증할 현장부터 골라보세요</h2>
+        <p>조건을 보고, 신청하고, 결제하면 확정됩니다. 그 다음은 현장에서 확인하세요.</p>
+        <router-link to="/testbeds" class="btn btn-primary btn-lg">현장 둘러보기</router-link>
       </div>
     </section>
 
@@ -91,21 +105,58 @@
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import SplitPortal from '@/components/SplitPortal.vue'
 import Icon from '@/components/Icon.vue'
 import CountUp from '@/components/CountUp.vue'
-import { category, categoryLabel, categoryStyle, formatFee } from '@/domain/pocket.js'
+import SlotThumb from '@/components/SlotThumb.vue'
+import { categoryLabel, categoryStyle, formatFee } from '@/domain/pocket.js'
+import { hostName, primeHosts } from '@/domain/hosts.js'
+import { courseApi } from '@/api/course.js'
+import { useAuthStore } from '@/store/auth.js'
 
-// 랜딩 전용 예시 데이터 (API 미연동 — 로그인 전에도 보여주는 소개용 카드)
-const featuredSlots = [
-  { id:1, title:'강남 직영 카페 · 무인 주문 로봇 실증',   category:'BACKEND',      host:'브루잉랩',      price:1200000 },
-  { id:2, title:'대형 마트 3개점 · 스마트 선반 실증',      category:'FRONTEND',     host:'리테일파트너스', price:2400000 },
-  { id:3, title:'수도권 물류센터 · 자율주행 AGV 실증',     category:'DEVOPS',       host:'한성로지스',    price:5600000 },
-  { id:4, title:'종합병원 외래 · 문진 AI 실증',            category:'DATA_SCIENCE', host:'미래의료원',    price:4800000 },
-  { id:5, title:'강남 오피스 12층 · 스마트 회의실 실증',   category:'MOBILE',       host:'워크스페이스K', price:1800000 },
-  { id:6, title:'IDC 상면 · 발열 예측 센서 실증',          category:'DATABASE',     host:'클라우드센터',  price:3200000 },
+/**
+ * 로그인 전에 보여줄 소개용 카드.
+ *
+ * 게이트웨이가 /api/courses 를 익명에게 401 로 막기 때문에, 로그인 전에는
+ * 실제 목록을 받을 수가 없다. 그때 이 카드로 화면을 채운다.
+ * 로그인한 사용자에게는 아래에서 실제 슬롯으로 교체한다.
+ */
+const SAMPLE_SLOTS = [
+  { id:1, title:'강남 직영 카페 · 무인 주문 로봇 실증',   category:'BACKEND',      instructorName:'브루잉랩',      price:1200000 },
+  { id:2, title:'대형 마트 3개점 · 스마트 선반 실증',      category:'FRONTEND',     instructorName:'리테일파트너스', price:2400000 },
+  { id:3, title:'수도권 물류센터 · 자율주행 AGV 실증',     category:'DEVOPS',       instructorName:'한성로지스',    price:5600000 },
+  { id:4, title:'종합병원 외래 · 문진 AI 실증',            category:'DATA_SCIENCE', instructorName:'미래의료원',    price:4800000 },
+  { id:5, title:'강남 오피스 12층 · 스마트 회의실 실증',   category:'MOBILE',       instructorName:'워크스페이스K', price:1800000 },
+  { id:6, title:'IDC 상면 · 발열 예측 센서 실증',          category:'DATABASE',     instructorName:'클라우드센터',  price:3200000 },
 ]
+
+const featuredSlots = ref(SAMPLE_SLOTS)
+
+/* 샘플 카드의 id 는 실제 슬롯이 아니다. 진짜 목록으로 교체된 뒤에만 상세로 보낸다. */
+const linkable = ref(false)
+
+onMounted(async () => {
+  // 익명이면 요청하지 않는다 — 401 인터셉터가 "세션 만료"로 오인해 토큰을 마크한다
+  if (!useAuthStore().accessToken) return
+
+  try {
+    const res = await courseApi.getCourses()
+    const list = Array.isArray(res.data?.data) ? res.data.data : []
+    if (!list.length) return
+
+    // 서버가 정렬을 받지 않는다. "인기"는 신청 건수 기준으로 화면에서 골라 낸다.
+    featuredSlots.value = [...list]
+      .sort((a, b) => (b.enrollmentCount ?? 0) - (a.enrollmentCount ?? 0))
+      .slice(0, 6)
+
+    linkable.value = true
+    await primeHosts(featuredSlots.value)
+  } catch (e) {
+    console.warn('[PoCket] 인기 테스트베드 조회 실패 — 소개용 카드를 유지한다:', e?.response?.status)
+  }
+})
 
 const stats = [
   { value: 1200,  suffix: '+', label: '실증 슬롯' },
@@ -114,10 +165,10 @@ const stats = [
 ]
 
 const features = [
-  { icon:'target', title:'AI 테스트베드 매칭', desc:'제품 카테고리와 실증 이력을 분석해 맞는 현장을 추천합니다.' },
-  { icon:'office', title:'검증된 실제 현장', desc:'카페·물류센터·병원 등 운영 중인 현장이 직접 슬롯을 등록합니다.' },
-  { icon:'document', title:'신청부터 확정까지', desc:'신청·승인·결제를 한 흐름으로 처리해 실증 준비 기간을 줄입니다.' },
-  { icon:'star', title:'상호 평가 기반 신뢰', desc:'실증이 끝나면 호스트와 스타트업이 서로 평가해 다음 매칭의 근거가 됩니다.' },
+  { icon:'target', title:'조건에 맞는 현장을 찾아줍니다', desc:'제품 카테고리와 지난 실증 이력을 함께 봅니다.' },
+  { icon:'office', title:'운영 중인 현장이 직접 등록합니다', desc:'카페·리테일·물류·헬스케어·오피스 등 8개 산업군.' },
+  { icon:'document', title:'결제하면 바로 확정됩니다', desc:'따로 심사를 기다릴 필요가 없습니다.' },
+  { icon:'star', title:'끝나면 서로 평가합니다', desc:'그 평판이 다음 매칭의 근거가 됩니다.' },
 ]
 </script>
 
@@ -150,7 +201,7 @@ const features = [
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
-  color: var(--color-primary);
+  color: var(--color-link);
   border-radius: var(--radius-pill);
   font-size: 12.5px;
   font-weight: 700;
@@ -164,13 +215,6 @@ const features = [
   letter-spacing: -0.045em;
   color: var(--color-text-primary);
   margin-bottom: 20px;
-}
-.hero-desc {
-  font-size: 17.5px;
-  color: var(--color-text-secondary);
-  line-height: 1.72;
-  max-width: 480px;
-  margin-bottom: 36px;
 }
 .hero-actions {
   display: flex;
@@ -225,6 +269,33 @@ const features = [
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-12px); }
 }
+/* ── 반응형 ──────────────────────────────────────────────────
+   이 화면에는 폭 미디어쿼리가 하나도 없었다. 390px 에서 scrollWidth 가 420 이라
+   히어로가 화면 밖으로 밀려 나갔다(범인: .hero-content, right 429).
+   기준 폭은 다른 화면과 같은 992px, 그리고 폰용 600px 두 단계만 쓴다. */
+@media (max-width: 992px) {
+  .hero { padding: 88px 0 72px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  /* 로고 타일이 auto 트랙이라 텍스트 칸의 최소 폭을 밀어낸다 */
+  .hero-visual { display: none; }
+  .hero-title { font-size: 40px; }
+  .course-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .features-section { padding: 72px 0; }
+  .popular-section { padding: 72px 0; }
+}
+
+@media (max-width: 600px) {
+  .hero { padding: 56px 0 48px; }
+  .hero-title { font-size: 31px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; text-align: center; }
+  .hero-stats { flex-wrap: wrap; }
+  .stat + .stat { border-left: none; }
+  .course-grid, .features-grid { grid-template-columns: minmax(0, 1fr); }
+  .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-logo { animation: none; }
 }
@@ -240,15 +311,17 @@ const features = [
 }
 .section-title { font-size: 28px; font-weight: 700; letter-spacing: -0.04em; color: var(--color-text-primary); }
 .section-title.center { text-align: center; margin-bottom: 40px; }
-.section-link { font-size: 14px; color: var(--color-primary); font-weight: 500; }
+.section-link { font-size: 14px; color: var(--color-link); font-weight: 500; }
 .section-link:hover { text-decoration: underline; }
 
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* 1fr 은 min-content 아래로 줄어들지 않는다. 좁은 화면에서 칸이 밖으로 밀려 나간다. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 .course-card-landing {
+  display: block;
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
@@ -279,15 +352,11 @@ const features = [
   background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 55%);
   pointer-events: none;
 }
-.thumb-teal   { background: #E1F5EE; }
-.thumb-blue   { background: #E6F1FB; }
-.thumb-purple { background: #EEEDFE; }
-.thumb-pink   { background: #FBEAF0; }
-.thumb-icon {
-  opacity: 0.72;
-  transition: var(--transition);
-}
-.course-card-landing:hover .thumb-icon { transform: scale(1.06); }
+/* 썸네일은 SlotThumb(자식 컴포넌트) 안에 있어 :deep() 으로 짚어야 한다 */
+.card-thumb :deep(.thumb-symbol),
+.card-thumb :deep(.thumb-photo) { transition: var(--transition); }
+.course-card-landing:hover :deep(.thumb-symbol),
+.course-card-landing:hover :deep(.thumb-photo) { transform: scale(1.06); }
 .card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; }
 .card-body .badge { align-self: flex-start; }
 .card-title {
@@ -311,7 +380,7 @@ const features = [
 .features-section { padding: 96px 0; background: transparent; }
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
 }
 .feature-card {
@@ -330,7 +399,7 @@ const features = [
   display: flex;
   justify-content: center;
   margin-bottom: 18px;
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 .feature-title { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 10px; }
 .feature-desc { font-size: 13.5px; color: var(--color-text-secondary); line-height: 1.68; }
@@ -346,7 +415,7 @@ const features = [
 .cta-inner p { font-size: 17px; color: rgba(255,255,255,0.82); margin-bottom: 36px; line-height: 1.7; }
 .cta-inner .btn-primary {
   background: #fff;
-  color: var(--color-primary);
+  color: var(--color-link);
   border-color: #fff;
   font-weight: 700;
   box-shadow: 0 10px 30px rgba(0,0,0,0.18);
@@ -376,4 +445,18 @@ const features = [
 }
 .footer-logo img { width: 28px; height: 28px; }
 .footer-copy { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+/* 투명도를 줄이도록 설정한 사용자에게는 유리를 불투명하게 —
+   가드가 없으면 설정을 켜도 blur 와 반투명이 그대로 남는다. */
+@media (prefers-reduced-transparency: reduce) {
+  .hero-badge,
+  .hero-stats,
+  .course-card-landing,
+  .feature-card {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border);
+  }
+}
 </style>

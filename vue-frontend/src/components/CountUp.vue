@@ -28,7 +28,11 @@ function render(n) {
 
 function run(startedAt) {
   const step = (now) => {
-    const t = Math.min((now - startedAt) / props.duration, 1)
+    // rAF 의 now 는 "콜백이 불린 시각"이 아니라 "그 프레임이 시작된 시각"이다.
+    // setTimeout 이 프레임 시작 직후에 발화하면 startedAt 이 다음 now 보다 뒤가 되어
+    // t 가 음수가 된다. easeOutExpo(-0.1) = -1 이라 -3,109,837 같은 값이 한 번 번쩍한다.
+    // 상한(1)만이 아니라 하한(0)도 막아야 한다.
+    const t = Math.min(Math.max((now - startedAt) / props.duration, 0), 1)
     value.value = props.to * easeOutExpo(t)
     render(value.value)
     if (t < 1) raf = requestAnimationFrame(step)

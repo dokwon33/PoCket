@@ -2,7 +2,7 @@
   <div class="callback-page">
     <div class="callback-box">
       <div class="spinner"></div>
-      <p>{{ message }}</p>
+      <p role="status" aria-live="polite">{{ message }}</p>
     </div>
   </div>
 </template>
@@ -47,7 +47,11 @@ onMounted(async () => {
   try {
     await auth.handleCallback(code)
     message.value = '로그인 완료! 이동 중입니다...'
-    router.replace('/testbeds')
+
+    // 로그인 때문에 튕겨 나왔던 곳이 있으면 그리로 돌려보낸다
+    const back = sessionStorage.getItem('pocket.login.redirect')
+    sessionStorage.removeItem('pocket.login.redirect')
+    router.replace(back && back.startsWith('/') ? back : '/testbeds')
   } catch (err) {
     console.error('OAuth callback 처리 실패:', err)
     message.value = '로그인 처리에 실패했습니다.'

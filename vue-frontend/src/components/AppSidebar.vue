@@ -119,7 +119,7 @@ function isActive(item) {
 
 .sidebar-item.active {
   background: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-link);
   font-weight: 700;
 }
 

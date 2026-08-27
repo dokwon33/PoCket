@@ -30,6 +30,12 @@
 
           <div v-if="reviewsLoading" class="empty-text">불러오는 중...</div>
 
+          <!-- review-service 가 죽었을 때 "평가가 없다" 고 말하면 안 된다 -->
+          <p v-else-if="reviewsError" class="empty-text error-text">
+            {{ reviewsError }}
+            <button type="button" class="text-btn" @click="loadReviews()">다시 시도</button>
+          </p>
+
           <ul v-else-if="received.length" class="review-list">
             <li v-for="r in received" :key="r.id" class="review-item">
               <div class="review-top">
@@ -209,6 +215,7 @@ import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
 import { reviewApi } from '@/api/review.js'
 import {
+  apiErrorMessage,
   categoryLabel,
   courseStatus,
   isHost,
@@ -227,6 +234,7 @@ const host = computed(() => isHost(auth.user?.role))
 const reputation = ref(null)
 const received = ref([])
 const reviewsLoading = ref(true)
+const reviewsError = ref('')
 /* 평가가 어느 슬롯에 대한 것인지 보여주려면 제목이 필요하다.
    ReviewResponse 에는 courseId 만 있으므로 슬롯을 한 번씩 조회해 채운다. */
 const reviewSlots = ref({})
@@ -291,6 +299,8 @@ async function loadReviews() {
     reviewsLoading.value = false
     return
   }
+  reviewsLoading.value = true
+  reviewsError.value = ''
   try {
     const [rep, list, mine] = await Promise.all([
       reviewApi.reputation(id),
@@ -308,6 +318,7 @@ async function loadReviews() {
     ])
   } catch (e) {
     console.warn('[MyPage] 평가 조회 실패:', e?.response?.status)
+    reviewsError.value = apiErrorMessage(e, '평가를 불러오지 못했습니다.')
   } finally {
     reviewsLoading.value = false
   }
@@ -528,7 +539,7 @@ onMounted(async () => {
   margin-top: 8px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 .review-slot:hover { text-decoration: underline; }
 .review-reply {
@@ -602,7 +613,7 @@ onMounted(async () => {
   height: 64px;
   border-radius: 50%;
   background: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-link);
   font-size: 24px;
   font-weight: 700;
   display: flex;
@@ -860,6 +871,13 @@ onMounted(async () => {
   color: var(--color-text-muted);
   font-size: 14px;
 }
+/* "평가가 없다" 와 "못 불러왔다" 는 색으로도 구분한다 */
+.error-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+}
 
 @keyframes shimmer {
   to {
@@ -895,6 +913,20 @@ onMounted(async () => {
 
   .summary-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 투명도를 줄이도록 설정한 사용자에게는 유리를 불투명하게 —
+   가드가 없으면 설정을 켜도 blur 와 반투명이 그대로 남는다. */
+@media (prefers-reduced-transparency: reduce) {
+  .review-item,
+  .profile-card,
+  .summary-card,
+  .instructor-course-card {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border);
   }
 }
 </style>

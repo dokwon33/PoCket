@@ -549,13 +549,11 @@ DB는 `pocket_mariadb_data` 볼륨에 저장되므로 **실행한 사람의 PC�
 `ACTIVE` 로 바뀌는 것은 Kafka 이벤트를 소비한 뒤입니다. 화면에서 "신청 완료"를 본 직후
 새로고침하면 아직 `PENDING` 일 수 있으며, 이것이 최종적 일관성이 사용자에게 드러나는 지점입니다.
 
-<!--
 | ![랜딩](assets/screenshots/01-landing.png) | ![로그인](assets/screenshots/02-login.png) |
 |---|---|
 | ![목록](assets/screenshots/03-testbed-list.png) | ![상세](assets/screenshots/04-testbed-detail.png) |
 | ![신청](assets/screenshots/05-apply.png) | ![신청 목록](assets/screenshots/06-applications.png) |
 | ![평가](assets/screenshots/07-review.png) | ![평판](assets/screenshots/08-reputation.png) |
--->
 
 캡처 기준과 파일 이름 규칙은 [`assets/README.md`](assets/README.md) 에 정리해두었습니다.
 
