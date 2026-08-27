@@ -152,6 +152,26 @@ Payment ──[ payment.completed ]──→ Kafka
 
 ### 시스템 아키텍처 구성도
 
+![PoCket 시스템 아키텍처](assets/diagrams/architecture.png)
+
+굵은 주황 화살표가 Kafka 를 거치는 비동기 구간이고, 실선은 동기 REST 호출입니다.
+보라색 파선은 게이트웨이를 거치지 않고 브라우저가 `review-service` 를 직접 호출하는 경로입니다.
+확장 서비스라 인증과 CORS 를 스스로 처리해야 하는 이유가 여기에 있습니다.
+
+원본은 [`assets/diagrams/architecture.svg`](assets/diagrams/architecture.svg) 이며,
+수정한 뒤 아래 명령으로 PNG 를 다시 뽑습니다.
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --disable-gpu --hide-scrollbars \
+  --window-size=1680,1120 --virtual-time-budget=4000 \
+  --screenshot=assets/diagrams/architecture.png \
+  file://$PWD/assets/diagrams/architecture.svg
+```
+
+<details>
+<summary>mermaid 소스 (GitHub 에서 바로 렌더링되는 간이 버전)</summary>
+
 ```mermaid
 graph TB
     B["브라우저 :3000<br/>vue-frontend"]
@@ -192,14 +212,7 @@ graph TB
     K == "추천 갱신" ==> R
 ```
 
-굵은 화살표가 Kafka 를 거치는 비동기 구간이고, 나머지는 동기 REST 호출입니다.
-선이 얽히지 않도록 아래 두 가지는 그림에서 생략했습니다.
-
-- **Eureka 등록**: 6개 서비스가 모두 기동 시 자신을 Eureka 에 등록하고 이름으로 서로를 찾습니다.
-- **MariaDB 연결**: 6개 서비스가 같은 인스턴스를 쓰며 테이블 단위로만 분리되어 있습니다.
-  `review-service` 는 자신이 만든 `reviews` 테이블 하나만 사용합니다.
-
-<!-- ![시스템 아키텍처](assets/diagrams/architecture.png) -->
+</details>
 
 ### 유스케이스 다이어그램
 

@@ -1,0 +1,284 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1120" viewBox="0 0 1680 1120" font-family="'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Segoe UI',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5B6472"/>
+    </marker>
+    <marker id="arrowKafka" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#E07B39"/>
+    </marker>
+    <marker id="arrowDot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9AA3B0"/>
+    </marker>
+    <linearGradient id="cardBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F7F8FB"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1B2733" flood-opacity="0.10"/>
+    </filter>
+
+    <!-- Vue -->
+    <g id="logoVue">
+      <polygon points="0,2 9,2 20,21 31,2 40,2 20,36" fill="#42B883"/>
+      <polygon points="9,2 20,21 31,2 24,2 20,9 16,2" fill="#35495E"/>
+    </g>
+    <!-- Spring -->
+    <g id="logoSpring">
+      <circle cx="20" cy="20" r="19" fill="#6DB33F"/>
+      <path d="M30,9 c5,6 5,15 -1,20 c-6,5 -15,4 -19,-2 c6,3 14,1 17,-5 c-3,3 -9,3 -12,0 c5,0 10,-3 9,-9 c3,2 5,5 6,8 c1,-4 1,-8 0,-12 z" fill="#FFFFFF"/>
+    </g>
+    <!-- FastAPI -->
+    <g id="logoFastapi">
+      <circle cx="20" cy="20" r="19" fill="#009688"/>
+      <polygon points="23,5 9,23 18,23 16,35 31,16 21,16" fill="#FFFFFF"/>
+    </g>
+    <!-- Kafka -->
+    <g id="logoKafka">
+      <g stroke="#231F20" stroke-width="3" stroke-linecap="round">
+        <line x1="14" y1="8" x2="14" y2="32"/>
+        <line x1="14" y1="20" x2="28" y2="9"/>
+        <line x1="14" y1="20" x2="28" y2="31"/>
+      </g>
+      <g fill="#231F20">
+        <circle cx="14" cy="7" r="4"/>
+        <circle cx="14" cy="33" r="4"/>
+        <circle cx="29" cy="8" r="4"/>
+        <circle cx="29" cy="32" r="4"/>
+        <circle cx="14" cy="20" r="3"/>
+      </g>
+    </g>
+    <!-- Eureka (Netflix OSS) -->
+    <g id="logoEureka">
+      <circle cx="20" cy="20" r="19" fill="#E50914"/>
+      <circle cx="20" cy="20" r="4.5" fill="#FFFFFF"/>
+      <g fill="#FFFFFF">
+        <circle cx="20" cy="7" r="3"/>
+        <circle cx="31" cy="26" r="3"/>
+        <circle cx="9" cy="26" r="3"/>
+      </g>
+      <g stroke="#FFFFFF" stroke-width="1.6" opacity="0.85">
+        <line x1="20" y1="16" x2="20" y2="10"/>
+        <line x1="23.5" y1="22" x2="28.5" y2="24.5"/>
+        <line x1="16.5" y1="22" x2="11.5" y2="24.5"/>
+      </g>
+    </g>
+    <!-- MariaDB -->
+    <g id="logoMaria">
+      <ellipse cx="20" cy="9" rx="15" ry="5.5" fill="#7FC7C0"/>
+      <path d="M5,9 v22 c0,3 6.7,5.5 15,5.5 s15,-2.5 15,-5.5 V9" fill="#003545"/>
+      <ellipse cx="20" cy="9" rx="15" ry="5.5" fill="none" stroke="#003545" stroke-width="1.5"/>
+      <path d="M5,19 c0,3 6.7,5.5 15,5.5 s15,-2.5 15,-5.5" fill="none" stroke="#7FC7C0" stroke-width="1.8"/>
+    </g>
+    <!-- Docker -->
+    <g id="logoDocker">
+      <g fill="#2496ED">
+        <rect x="4" y="16" width="7" height="6" rx="1"/>
+        <rect x="12.5" y="16" width="7" height="6" rx="1"/>
+        <rect x="21" y="16" width="7" height="6" rx="1"/>
+        <rect x="12.5" y="9" width="7" height="6" rx="1"/>
+        <path d="M2,24 h32 c0,7 -5,11 -12,11 h-6 c-8,0 -14,-4 -14,-11 z"/>
+        <path d="M33,21 c3,-2 6,-1 7,1 c-2,2 -5,2 -7,-1 z"/>
+      </g>
+    </g>
+    <!-- JWT -->
+    <g id="logoJwt">
+      <circle cx="20" cy="20" r="19" fill="#2B2B4A"/>
+      <g fill="#FB015B">
+        <circle cx="20" cy="10" r="3"/>
+        <circle cx="20" cy="30" r="3"/>
+      </g>
+      <g fill="#00F2E6">
+        <circle cx="11" cy="15" r="3"/>
+        <circle cx="29" cy="25" r="3"/>
+      </g>
+      <g fill="#D63AFF">
+        <circle cx="29" cy="15" r="3"/>
+        <circle cx="11" cy="25" r="3"/>
+      </g>
+    </g>
+  </defs>
+
+  <rect width="1680" height="1120" fill="#FDFDFE"/>
+
+  <!-- 제목 -->
+  <text x="60" y="52" font-size="30" font-weight="700" fill="#1B2733">PoCket 시스템 아키텍처</text>
+  <text x="60" y="80" font-size="16" fill="#6B7684">테스트베드 실증 매칭 플랫폼 · 서비스 6개 + 인프라 4개 + 화면 1개</text>
+
+  <!-- 클라이언트 -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="110" width="330" height="86" rx="14" fill="url(#cardBg)" stroke="#D9DEE7" stroke-width="1.5"/>
+  </g>
+  <use href="#logoVue" x="84" y="132"/>
+  <text x="142" y="147" font-size="19" font-weight="700" fill="#1B2733">vue-frontend</text>
+  <text x="142" y="170" font-size="14" fill="#6B7684">브라우저 :3000 · Vue 3 + Vite</text>
+
+  <!-- Docker 경계 -->
+  <rect x="60" y="228" width="1560" height="800" rx="22" fill="none" stroke="#2496ED" stroke-width="2" stroke-dasharray="10 7" opacity="0.55"/>
+  <use href="#logoDocker" x="82" y="242"/>
+  <text x="130" y="268" font-size="15" font-weight="700" fill="#2496ED">docker compose · 컨테이너 11개 · lecture-net</text>
+
+  <!-- 게이트웨이 -->
+  <g filter="url(#shadow)">
+    <rect x="150" y="300" width="420" height="96" rx="14" fill="url(#cardBg)" stroke="#6DB33F" stroke-width="2"/>
+  </g>
+  <use href="#logoSpring" x="176" y="326"/>
+  <text x="234" y="342" font-size="19" font-weight="700" fill="#1B2733">API Gateway <tspan fill="#6B7684" font-weight="400">:8080</tspan></text>
+  <text x="234" y="364" font-size="14" fill="#6B7684">Spring Cloud Gateway</text>
+  <text x="234" y="384" font-size="13" fill="#8A94A3">단일 진입점 · 라우팅 · 토큰 검증</text>
+
+  <!-- Auth Server -->
+  <g filter="url(#shadow)">
+    <rect x="1080" y="300" width="420" height="96" rx="14" fill="url(#cardBg)" stroke="#D9DEE7" stroke-width="1.5"/>
+  </g>
+  <use href="#logoJwt" x="1106" y="326"/>
+  <text x="1164" y="342" font-size="19" font-weight="700" fill="#1B2733">Auth Server <tspan fill="#6B7684" font-weight="400">:9000</tspan></text>
+  <text x="1164" y="364" font-size="14" fill="#6B7684">Spring Authorization Server</text>
+  <text x="1164" y="384" font-size="13" fill="#8A94A3">토큰 발급 · JWK 공개키 제공</text>
+
+  <!-- 제공 서비스 패널 -->
+  <rect x="100" y="452" width="880" height="216" rx="16" fill="#F4F6FA" stroke="#D9DEE7" stroke-width="1.5"/>
+  <text x="124" y="482" font-size="15" font-weight="700" fill="#4A5462">제공 서비스 · 이미지 그대로 · 수정 0줄</text>
+
+  <g filter="url(#shadow)">
+    <rect x="124" y="498" width="160" height="146" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+    <rect x="298" y="498" width="160" height="146" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+    <rect x="472" y="498" width="160" height="146" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+    <rect x="646" y="498" width="160" height="146" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+    <rect x="820" y="498" width="136" height="146" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+  </g>
+
+  <use href="#logoSpring" x="184" y="516"/>
+  <text x="204" y="586" font-size="15" font-weight="700" fill="#1B2733" text-anchor="middle">user</text>
+  <text x="204" y="606" font-size="13" fill="#6B7684" text-anchor="middle">:8081</text>
+  <text x="204" y="628" font-size="12" fill="#8A94A3" text-anchor="middle">회원</text>
+
+  <use href="#logoSpring" x="358" y="516"/>
+  <text x="378" y="586" font-size="15" font-weight="700" fill="#1B2733" text-anchor="middle">course</text>
+  <text x="378" y="606" font-size="13" fill="#6B7684" text-anchor="middle">:8082</text>
+  <text x="378" y="628" font-size="12" fill="#8A94A3" text-anchor="middle">실증 슬롯</text>
+
+  <use href="#logoSpring" x="532" y="516"/>
+  <text x="552" y="586" font-size="15" font-weight="700" fill="#1B2733" text-anchor="middle">enrollment</text>
+  <text x="552" y="606" font-size="13" fill="#6B7684" text-anchor="middle">:8083</text>
+  <text x="552" y="628" font-size="12" fill="#8A94A3" text-anchor="middle">실증 신청</text>
+
+  <use href="#logoSpring" x="706" y="516"/>
+  <text x="726" y="586" font-size="15" font-weight="700" fill="#1B2733" text-anchor="middle">payment</text>
+  <text x="726" y="606" font-size="13" fill="#6B7684" text-anchor="middle">:8084</text>
+  <text x="726" y="628" font-size="12" fill="#8A94A3" text-anchor="middle">실증비 결제</text>
+
+  <use href="#logoFastapi" x="868" y="516"/>
+  <text x="888" y="586" font-size="15" font-weight="700" fill="#1B2733" text-anchor="middle">recommend</text>
+  <text x="888" y="606" font-size="13" fill="#6B7684" text-anchor="middle">:8085</text>
+  <text x="888" y="628" font-size="12" fill="#8A94A3" text-anchor="middle">추천</text>
+
+  <!-- 팀 개발 패널 -->
+  <rect x="1080" y="452" width="420" height="216" rx="16" fill="#F3F0FF" stroke="#8B7CF0" stroke-width="2" stroke-dasharray="8 5"/>
+  <text x="1104" y="482" font-size="15" font-weight="700" fill="#6A5AE0">팀 개발 · 신규 서비스</text>
+  <g filter="url(#shadow)">
+    <rect x="1104" y="498" width="372" height="146" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+  </g>
+  <use href="#logoFastapi" x="1128" y="522"/>
+  <text x="1186" y="540" font-size="19" font-weight="700" fill="#1B2733">review-service <tspan fill="#6B7684" font-weight="400">:8090</tspan></text>
+  <text x="1186" y="562" font-size="14" fill="#6B7684">FastAPI · SQLAlchemy · JWT 자체 검증</text>
+  <text x="1128" y="596" font-size="13" fill="#4A5462">상호 평가 · 평판 집계</text>
+  <text x="1128" y="620" font-size="12.5" fill="#8A94A3">reviews 테이블만 소유 · 기존 테이블 무접근</text>
+
+  <!-- 인프라 패널 -->
+  <rect x="100" y="722" width="1400" height="252" rx="16" fill="#F4F6FA" stroke="#D9DEE7" stroke-width="1.5"/>
+  <text x="124" y="752" font-size="15" font-weight="700" fill="#4A5462">인프라</text>
+
+  <g filter="url(#shadow)">
+    <rect x="140" y="778" width="380" height="150" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+    <rect x="620" y="778" width="360" height="150" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+    <rect x="1080" y="778" width="380" height="150" rx="12" fill="#FFFFFF" stroke="#E3E7EE"/>
+  </g>
+
+  <use href="#logoKafka" x="168" y="806"/>
+  <text x="226" y="824" font-size="19" font-weight="700" fill="#1B2733">Kafka <tspan fill="#6B7684" font-weight="400">:9092</tspan></text>
+  <text x="226" y="846" font-size="14" fill="#6B7684">KRaft 모드 · 이벤트 버스</text>
+  <text x="168" y="880" font-size="13" fill="#4A5462">payment.completed</text>
+  <text x="168" y="902" font-size="13" fill="#4A5462">enrollment.completed</text>
+
+  <use href="#logoEureka" x="648" y="806"/>
+  <text x="706" y="824" font-size="19" font-weight="700" fill="#1B2733">Eureka <tspan fill="#6B7684" font-weight="400">:8761</tspan></text>
+  <text x="706" y="846" font-size="14" fill="#6B7684">Netflix Service Discovery</text>
+  <text x="648" y="880" font-size="13" fill="#4A5462">6개 서비스가 기동 시 자신을 등록</text>
+  <text x="648" y="902" font-size="13" fill="#8A94A3">이름으로 서로를 찾는다</text>
+
+  <use href="#logoMaria" x="1108" y="804"/>
+  <text x="1166" y="824" font-size="19" font-weight="700" fill="#1B2733">MariaDB <tspan fill="#6B7684" font-weight="400">:3379 → 3306</tspan></text>
+  <text x="1166" y="846" font-size="14" fill="#6B7684">MariaDB 11.2</text>
+  <text x="1108" y="880" font-size="13" fill="#4A5462">단일 인스턴스 · 테이블 단위로만 분리</text>
+  <text x="1108" y="902" font-size="13" fill="#8A94A3">users · courses · enrollments · payments · reviews</text>
+
+  <!-- ── 연결선 ── -->
+
+  <!-- 브라우저 → 게이트웨이 -->
+  <path d="M225,196 L225,300" stroke="#5B6472" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <text x="238" y="252" font-size="13.5" fill="#4A5462">HTTPS 요청</text>
+
+  <!-- 브라우저 → review (게이트웨이 미경유) -->
+  <path d="M390,150 C760,120 1290,180 1290,498" stroke="#8B7CF0" stroke-width="2.2" fill="none" stroke-dasharray="9 6" marker-end="url(#arrow)"/>
+  <rect x="700" y="120" width="250" height="26" rx="6" fill="#F3F0FF" stroke="#C9C0F5"/>
+  <text x="825" y="138" font-size="13.5" fill="#6A5AE0" text-anchor="middle" font-weight="600">게이트웨이 미경유 · 직접 호출</text>
+
+  <!-- 게이트웨이 → 서비스 패널 -->
+  <path d="M360,396 L360,452" stroke="#5B6472" stroke-width="2.4" fill="none" marker-end="url(#arrow)"/>
+  <text x="374" y="428" font-size="13.5" fill="#4A5462">라우팅 · 검증 후 X-User-Id 부착</text>
+
+  <!-- 게이트웨이 ⇢ Auth (JWK) -->
+  <path d="M570,336 L1080,336" stroke="#9AA3B0" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#arrowDot)"/>
+  <text x="825" y="328" font-size="13.5" fill="#6B7684" text-anchor="middle">JWK 공개키 조회</text>
+
+  <!-- review ⇢ Auth (JWK) -->
+  <path d="M1290,498 L1290,396" stroke="#9AA3B0" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#arrowDot)"/>
+  <text x="1302" y="452" font-size="13.5" fill="#6B7684">JWK 공개키 조회</text>
+
+  <!-- review → 제공 서비스 (REST) -->
+  <path d="M1104,560 L980,560" stroke="#5B6472" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <text x="1030" y="546" font-size="12.5" fill="#4A5462" text-anchor="middle" font-weight="600">REST</text>
+  <text x="1030" y="580" font-size="11.5" fill="#8A94A3" text-anchor="middle">당사자 확인</text>
+
+  <!-- enrollment → course / payment (동기 REST) -->
+  <path d="M532,570 L458,570" stroke="#5B6472" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M632,570 L646,570" stroke="#5B6472" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Kafka 비동기 -->
+  <path d="M700,668 C700,712 430,700 330,778" stroke="#E07B39" stroke-width="3.4" fill="none" marker-end="url(#arrowKafka)"/>
+  <rect x="404" y="686" width="196" height="26" rx="6" fill="#FFF3E9" stroke="#F0C29A"/>
+  <text x="502" y="704" font-size="13.5" fill="#C25F16" text-anchor="middle" font-weight="600">이벤트 발행 (비동기)</text>
+
+  <path d="M420,778 C520,700 780,712 830,668" stroke="#E07B39" stroke-width="3.4" fill="none" marker-end="url(#arrowKafka)"/>
+  <rect x="606" y="722" width="240" height="26" rx="6" fill="#FFF3E9" stroke="#F0C29A"/>
+  <text x="726" y="740" font-size="13.5" fill="#C25F16" text-anchor="middle" font-weight="600">확정 처리 · 추천 갱신 (구독)</text>
+
+  <!-- 서비스 → Eureka 등록 -->
+  <path d="M900,668 C900,720 800,730 800,778" stroke="#9AA3B0" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#arrowDot)"/>
+  <text x="912" y="712" font-size="13" fill="#6B7684">등록</text>
+
+  <!-- review → Eureka 등록 -->
+  <path d="M1150,668 C1150,720 990,730 980,806" stroke="#9AA3B0" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#arrowDot)"/>
+
+  <!-- 제공 서비스 → MariaDB -->
+  <path d="M960,668 C1010,706 1080,730 1140,778" stroke="#5B6472" stroke-width="2" fill="none" opacity="0.55" marker-end="url(#arrow)"/>
+
+  <!-- 서비스/review → MariaDB -->
+  <path d="M1330,668 L1330,778" stroke="#5B6472" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <text x="1342" y="726" font-size="13" fill="#4A5462">reviews 테이블</text>
+
+  <!-- 범례 -->
+  <g transform="translate(60,1046)">
+    <line x1="0" y1="10" x2="46" y2="10" stroke="#5B6472" stroke-width="2.4" marker-end="url(#arrow)"/>
+    <text x="56" y="15" font-size="14" fill="#4A5462">동기 REST 호출</text>
+
+    <line x1="230" y1="10" x2="276" y2="10" stroke="#E07B39" stroke-width="3.4" marker-end="url(#arrowKafka)"/>
+    <text x="286" y="15" font-size="14" fill="#4A5462">Kafka 비동기 이벤트</text>
+
+    <line x1="490" y1="10" x2="536" y2="10" stroke="#9AA3B0" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrowDot)"/>
+    <text x="546" y="15" font-size="14" fill="#4A5462">등록 · 공개키 조회</text>
+
+    <line x1="740" y1="10" x2="786" y2="10" stroke="#8B7CF0" stroke-width="2.2" stroke-dasharray="9 6" marker-end="url(#arrow)"/>
+    <text x="796" y="15" font-size="14" fill="#4A5462">게이트웨이를 거치지 않는 확장 서비스 호출</text>
+  </g>
+</svg>
