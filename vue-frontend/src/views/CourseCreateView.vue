@@ -30,14 +30,42 @@
             </div>
 
             <div class="form-group">
+              <label class="form-label" for="category">산업군</label>
+              <select id="category" v-model="form.category" class="form-select">
+                <option disabled value="">산업군을 선택하세요</option>
+                <option
+                  v-for="option in categoryOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+              <p class="field-hint">먼저 고르면 아래 설명 입력에 그 분야 안내가 나옵니다.</p>
+            </div>
+
+            <div class="form-group">
               <label class="form-label" for="description">현장 · 환경 스펙</label>
               <textarea
                 id="description"
                 v-model.trim="form.description"
                 class="form-textarea"
                 rows="6"
-                placeholder="현장 규모, 이용객 수, 전원·네트워크 조건, 실증 가능 기간 등을 입력해 주세요."
+                :placeholder="descPlaceholder"
+                aria-describedby="desc-guide"
               ></textarea>
+
+              <!-- courses 에 스펙 컬럼이 없어 이 자유 텍스트가 유일한 정보다.
+                   무엇을 적어야 하는지 알려 주는 것이 지금 할 수 있는 최선이다. -->
+              <div id="desc-guide" class="spec-guide">
+                <template v-if="guide">
+                  <p class="spec-title">{{ categoryLabel(form.category) }} 신청자가 주로 확인하는 것</p>
+                  <ul class="spec-items">
+                    <li v-for="item in guide.items" :key="item">{{ item }}</li>
+                  </ul>
+                </template>
+                <p v-else class="field-hint">산업군을 고르면 그 분야에서 확인하는 항목을 알려드립니다.</p>
+              </div>
             </div>
 
             <div class="form-group">
@@ -57,36 +85,20 @@
               </p>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="category">산업군</label>
-                <select id="category" v-model="form.category" class="form-select">
-                  <option disabled value="">산업군을 선택하세요</option>
-                  <option
-                    v-for="option in categoryOptions"
-                    :key="option.value"
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="price">실증비</label>
-                <input
-                  id="price"
-                  v-model.number="form.price"
-                  type="number"
-                  min="0"
-                  :max="PRICE_MAX"
-                  step="1"
-                  class="form-input"
-                  placeholder="예: 1200000"
-                  aria-describedby="price-hint"
-                />
-                <p id="price-hint" class="field-hint">최대 {{ formatFee(PRICE_MAX) }}원까지 입력할 수 있습니다.</p>
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="price">실증비</label>
+              <input
+                id="price"
+                v-model.number="form.price"
+                type="number"
+                min="0"
+                :max="PRICE_MAX"
+                step="1"
+                class="form-input"
+                placeholder="예: 1200000"
+                aria-describedby="price-hint"
+              />
+              <p id="price-hint" class="field-hint">최대 {{ formatFee(PRICE_MAX) }}원까지 입력할 수 있습니다.</p>
             </div>
 
             <div v-show="validationError" class="error-box" role="alert">
@@ -119,13 +131,21 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { courseApi } from '@/api/course.js'
 import { useAuthStore } from '@/store/auth.js'
-import { CATEGORIES, PRICE_MAX, formatFee, isHost, apiErrorMessage } from '@/domain/pocket.js'
+import {
+  CATEGORIES,
+  PRICE_MAX,
+  categoryLabel,
+  formatFee,
+  isHost,
+  specGuide,
+  apiErrorMessage
+} from '@/domain/pocket.js'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -145,6 +165,17 @@ const submitSuccess = ref('')
 
 // 산업군 8종을 매핑 모듈에서 그대로 가져온다 (여기에 따로 나열하면 또 갈라진다)
 const categoryOptions = CATEGORIES.map(({ code, label }) => ({ value: code, label }))
+
+/*
+ * 산업군별 등록 안내.
+ * courses 에 스펙 컬럼이 없어 설명 자유 텍스트가 유일한 정보다. 컬럼을 늘리는
+ * 대신 무엇을 적어야 하는지 알려 줘서 내용의 질을 끌어올린다.
+ */
+const guide = computed(() => specGuide(form.category))
+
+const descPlaceholder = computed(
+  () => guide.value?.example ?? '현장 규모, 이용객 수, 전원·네트워크 조건, 실증 가능 기간 등을 입력해 주세요.'
+)
 
 function validateForm() {
   validationError.value = ''
@@ -335,6 +366,30 @@ async function handleSubmit() {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+/* 산업군별 등록 안내 */
+.spec-guide {
+  margin-top: 10px;
+}
+.spec-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+.spec-items {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.spec-items li {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
 }
 
 /* 제약을 입력 전에 알려 준다 — 보내고 나서 거절당하면 이유를 모른다 */
