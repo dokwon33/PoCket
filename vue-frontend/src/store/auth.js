@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(sessionStorage.getItem('user') || 'null'))
 
   const isAuthenticated = computed(() => !!accessToken.value)
-  const isInstructor = computed(() => user.value?.role === 'INSTRUCTOR')
+  const isHost = computed(() => user.value?.role === 'HOST')
 
   function setToken(token) {
     accessToken.value = token
@@ -110,7 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken,
     user,
     isAuthenticated,
-    isInstructor,
+    isHost,
     setToken,
     setUser,
     fetchUser,

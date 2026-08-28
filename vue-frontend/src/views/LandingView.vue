@@ -160,8 +160,8 @@ const heroActions = computed(() => {
      * 미리 채운다. 두 버튼이 같은 곳으로 가되 의미는 다르다.
      */
     return [
-      { to: '/register?role=STUDENT', label: '스타트업으로 시작하기', primary: true },
-      { to: '/register?role=INSTRUCTOR', label: '호스트로 시작하기' }
+      { to: '/register?role=STARTUP', label: '스타트업으로 시작하기', primary: true },
+      { to: '/register?role=HOST', label: '호스트로 시작하기' }
     ]
   }
   if (host.value) {
@@ -191,7 +191,7 @@ const cta = computed(() => {
     return {
       title: '검증할 현장부터 골라보세요',
       desc: '가입하면 산업군별 실증 슬롯을 모두 볼 수 있습니다.',
-      to: '/register?role=STUDENT',
+      to: '/register?role=STARTUP',
       label: '스타트업으로 시작하기'
     }
   }

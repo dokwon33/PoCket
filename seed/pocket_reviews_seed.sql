@@ -19,14 +19,14 @@
 
 -- 표시용 스타트업 계정 (이미 있으면 건너뜀)
 INSERT IGNORE INTO users (id, email, password, name, role, created_at, updated_at) VALUES
-  (20, 'startup.20@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '뉴런로보틱스', 'STUDENT', NOW(), NOW()),
-  (21, 'startup.21@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '셀프오더랩', 'STUDENT', NOW(), NOW()),
-  (22, 'startup.22@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '스택하우스', 'STUDENT', NOW(), NOW()),
-  (23, 'startup.23@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '비전메트릭', 'STUDENT', NOW(), NOW()),
-  (24, 'startup.24@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '케어브릿지', 'STUDENT', NOW(), NOW()),
-  (25, 'startup.25@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '워크플로우스', 'STUDENT', NOW(), NOW()),
-  (26, 'startup.26@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '가디언AI', 'STUDENT', NOW(), NOW()),
-  (27, 'startup.27@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '델타로지스', 'STUDENT', NOW(), NOW());
+  (20, 'startup.20@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '뉴런로보틱스', 'STARTUP', NOW(), NOW()),
+  (21, 'startup.21@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '셀프오더랩', 'STARTUP', NOW(), NOW()),
+  (22, 'startup.22@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '스택하우스', 'STARTUP', NOW(), NOW()),
+  (23, 'startup.23@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '비전메트릭', 'STARTUP', NOW(), NOW()),
+  (24, 'startup.24@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '케어브릿지', 'STARTUP', NOW(), NOW()),
+  (25, 'startup.25@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '워크플로우스', 'STARTUP', NOW(), NOW()),
+  (26, 'startup.26@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '가디언AI', 'STARTUP', NOW(), NOW()),
+  (27, 'startup.27@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '델타로지스', 'STARTUP', NOW(), NOW());
 
 -- 신청 (평가가 참조할 대상)
 INSERT INTO enrollments (user_id, course_id, status, created_at, updated_at)
