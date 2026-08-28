@@ -3,6 +3,21 @@
     <!-- 산업군 타일 -->
     <SlotThumb class="card-thumb" :course="slot" :icon-size="42" />
 
+    <!--
+      카드 전체가 링크라 담기 버튼은 이동을 막아야 한다.
+      prevent 만 걸면 부모 라우터링크가 여전히 클릭을 받는다 — stop 까지 필요하다.
+    -->
+    <button
+      type="button"
+      class="compare-btn"
+      :class="{ on: picked }"
+      :aria-pressed="picked"
+      :aria-label="picked ? '비교함에서 빼기' : '비교함에 담기'"
+      @click.prevent.stop="onCompare"
+    >
+      <Icon :name="picked ? 'check' : 'compare'" :size="15" />
+    </button>
+
     <!-- 내용 -->
     <div class="card-body">
       <div class="card-tags">
@@ -27,14 +42,25 @@
 <script setup>
 import { computed } from 'vue'
 import SlotThumb from '@/components/SlotThumb.vue'
+import Icon from '@/components/Icon.vue'
 import { category, categoryStyle, courseStatus, enrollmentStatus, formatFee } from '@/domain/pocket.js'
 import { isMine, myStatusOf } from '@/domain/myEnrollments.js'
 import { hostName as resolveHost } from '@/domain/hosts.js'
+import { isPicked, toggleCompare } from '@/domain/compare.js'
 
 // prop 이름은 백엔드 응답 형태(course)를 그대로 받되, 화면에서는 실증 슬롯으로 읽는다.
 const props = defineProps({
   course: { type: Object, required: true }
 })
+
+// 비교함이 가득 찼을 때를 목록이 알아야 한다 — 조용히 무시하면 버튼이 고장 난 것처럼 보인다
+const emit = defineEmits(['compare-full'])
+
+const picked = computed(() => isPicked(props.course))
+
+function onCompare() {
+  if (!toggleCompare(props.course)) emit('compare-full')
+}
 
 const slot = computed(() => props.course)
 const cat = computed(() => category(props.course?.category))
@@ -55,6 +81,7 @@ const runCount = computed(() =>
 
 <style scoped>
 .course-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: var(--glass-bg);
@@ -98,6 +125,37 @@ const runCount = computed(() =>
 .card-thumb :deep(.thumb-photo) { transition: var(--transition); }
 .course-card:hover :deep(.thumb-symbol),
 .course-card:hover :deep(.thumb-photo) { transform: scale(1.06); }
+/* 비교함 담기 — 썸네일 위에 얹는다 */
+.compare-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-edge);
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-secondary);
+  transition: var(--transition);
+}
+.compare-btn:hover {
+  background: #fff;
+  color: var(--color-link);
+  transform: scale(1.08);
+}
+.compare-btn.on {
+  background: var(--color-primary);
+  border-color: transparent;
+  color: #fff;
+}
+
 .card-body {
   padding: 18px 20px 20px;
   display: flex;
@@ -183,11 +241,13 @@ const runCount = computed(() =>
 /* 투명도를 줄이도록 설정한 사용자에게는 유리를 불투명하게 —
    가드가 없으면 설정을 켜도 blur 와 반투명이 그대로 남는다. */
 @media (prefers-reduced-transparency: reduce) {
-  .course-card {
+  .course-card,
+  .compare-btn {
     background: var(--color-bg-primary);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     border-color: var(--color-border);
   }
+  .compare-btn.on { background: var(--color-primary); }
 }
 </style>

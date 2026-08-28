@@ -10,8 +10,12 @@
           <span class="hero-badge">PoCket 테스트베드</span>
           <h1 class="hero-title">제품을 검증할 현장,<br>더 빠르게 찾으세요</h1>
           <div class="hero-actions">
-            <router-link to="/testbeds" class="btn btn-primary btn-lg">현장 둘러보기</router-link>
-            <router-link to="/register" class="btn btn-outline btn-lg">우리 현장 등록하기</router-link>
+            <router-link
+              v-for="a in heroActions"
+              :key="a.to"
+              :to="a.to"
+              :class="['btn', 'btn-lg', a.primary ? 'btn-primary' : 'btn-outline']"
+            >{{ a.label }}</router-link>
           </div>
           <div class="hero-stats">
             <div v-for="(s, i) in stats" :key="s.label" class="stat">
@@ -88,9 +92,9 @@
     <!-- CTA -->
     <section class="cta-section">
       <div class="cta-inner" v-reveal="{ y: 24 }">
-        <h2>검증할 현장부터 골라보세요</h2>
-        <p>조건을 보고, 신청하고, 결제하면 확정됩니다. 그 다음은 현장에서 확인하세요.</p>
-        <router-link to="/testbeds" class="btn btn-primary btn-lg">현장 둘러보기</router-link>
+        <h2>{{ cta.title }}</h2>
+        <p>{{ cta.desc }}</p>
+        <router-link :to="cta.to" class="btn btn-primary btn-lg">{{ cta.label }}</router-link>
       </div>
     </section>
 
@@ -108,13 +112,13 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import SplitPortal from '@/components/SplitPortal.vue'
 import Icon from '@/components/Icon.vue'
 import CountUp from '@/components/CountUp.vue'
 import SlotThumb from '@/components/SlotThumb.vue'
-import { categoryLabel, categoryStyle, formatFee } from '@/domain/pocket.js'
+import { categoryLabel, categoryStyle, formatFee, isHost } from '@/domain/pocket.js'
 import { hostName, primeHosts } from '@/domain/hosts.js'
 import { isMine, primeMyEnrollments } from '@/domain/myEnrollments.js'
 import { courseApi } from '@/api/course.js'
@@ -127,6 +131,79 @@ import { useAuthStore } from '@/store/auth.js'
  * 실제 목록을 받을 수가 없다. 그때 이 카드로 화면을 채운다.
  * 로그인한 사용자에게는 아래에서 실제 슬롯으로 교체한다.
  */
+const auth = useAuthStore()
+const host = computed(() => isHost(auth.user?.role))
+
+/*
+ * 히어로·CTA 버튼은 상태에 따라 달라져야 한다.
+ *
+ * 하나로 고정하면 어느 쪽에게든 틀린다.
+ *  - 로그인한 호스트에게 '현장 둘러보기' 는 신청할 수 없는 목록으로 가는 버튼이다.
+ *  - '우리 현장 등록하기' 는 /register 를 가리키는데 그 경로가 guestOnly 라,
+ *    로그인한 사람이 누르면 가드가 조용히 /testbeds 로 되돌린다.
+ *    호스트가 진짜로 슬롯을 등록하려 눌러도 마찬가지다 — 등록 화면은 /testbeds/new 다.
+ *
+ * 양면 시장 안내는 진입 포털(SplitPortal)이 좌우로 갈라 이미 하고 있으므로,
+ * 히어로에서는 지금 이 사람에게 맞는 다음 걸음 하나만 또렷하게 준다.
+ */
+const heroActions = computed(() => {
+  if (!auth.isAuthenticated) {
+    /*
+     * 비로그인일 때는 둘 다 회원가입으로 보낸다.
+     *
+     * 예전에는 '현장 둘러보기' 가 /testbeds 를 가리켰는데, 게이트웨이가 익명
+     * 조회를 401 로 막아 가드가 로그인 화면으로 되돌렸다. 라벨은 둘러보기라고
+     * 하는데 도착지는 로그인 화면이라 말과 결과가 어긋났다.
+     *
+     * 진입 포털이 이미 좌우로 갈라 "검증할 현장을 찾나요 / 먼저 써보고
+     * 싶으신가요" 를 물어본다. 그 답을 ?role= 로 넘겨 가입 폼의 역할을
+     * 미리 채운다. 두 버튼이 같은 곳으로 가되 의미는 다르다.
+     */
+    return [
+      { to: '/register?role=STARTUP', label: '스타트업으로 시작하기', primary: true },
+      { to: '/register?role=HOST', label: '호스트로 시작하기' }
+    ]
+  }
+  if (host.value) {
+    return [
+      { to: '/testbeds/new', label: '실증 슬롯 등록하기', primary: true },
+      { to: '/mypage', label: '내 슬롯 관리' }
+    ]
+  }
+  return [
+    { to: '/testbeds', label: '현장 둘러보기', primary: true },
+    { to: '/applications', label: '내 실증 신청' }
+  ]
+})
+
+const cta = computed(() => {
+  if (host.value) {
+    return {
+      title: '우리 현장을 실증 슬롯으로 열어보세요',
+      desc: '남는 시간대와 공간을 등록하면 스타트업이 찾아옵니다. 실증비도 받습니다.',
+      to: '/testbeds/new',
+      label: '실증 슬롯 등록하기'
+    }
+  }
+
+  // 비로그인에게 /testbeds 를 권하면 로그인 화면으로 튕긴다. 가입으로 보낸다.
+  if (!auth.isAuthenticated) {
+    return {
+      title: '검증할 현장부터 골라보세요',
+      desc: '가입하면 산업군별 실증 슬롯을 모두 볼 수 있습니다.',
+      to: '/register?role=STARTUP',
+      label: '스타트업으로 시작하기'
+    }
+  }
+
+  return {
+    title: '검증할 현장부터 골라보세요',
+    desc: '조건을 보고, 신청하고, 결제하면 확정됩니다. 그 다음은 현장에서 확인하세요.',
+    to: '/testbeds',
+    label: '현장 둘러보기'
+  }
+})
+
 const SAMPLE_SLOTS = [
   { id:1, title:'강남 직영 카페 · 무인 주문 로봇 실증',   category:'BACKEND',      instructorName:'브루잉랩',      price:1200000 },
   { id:2, title:'대형 마트 3개점 · 스마트 선반 실증',      category:'FRONTEND',     instructorName:'리테일파트너스', price:2400000 },
@@ -143,7 +220,7 @@ const linkable = ref(false)
 
 onMounted(async () => {
   // 익명이면 요청하지 않는다 — 401 인터셉터가 "세션 만료"로 오인해 토큰을 마크한다
-  if (!useAuthStore().accessToken) return
+  if (!auth.accessToken) return
 
   try {
     const res = await courseApi.getCourses()

@@ -1,32 +1,21 @@
 <template>
   <div class="login-page">
-    <div class="login-layout">
-      <!-- 좌측 브랜딩 -->
-      <div class="login-left">
-        <div class="brand">
-          <img src="@/assets/images/logo/pocket-symbol-inverse.svg" alt="PoCket" class="brand-logo" />
-          <span class="brand-name">PoCket</span>
-        </div>
-        <div class="brand-content">
-          <h2>제품을 검증할<br>현장을 만나세요</h2>
-          <p>로그인하고 우리 제품에 맞는 실증 테스트베드를 확인하세요.</p>
-          <ul class="feature-list">
-            <li v-for="f in features" :key="f">
-              <span class="dot"></span>{{ f }}
-            </li>
-          </ul>
-        </div>
-      </div>
+    <div class="login-center">
+      <!-- 브랜드 -->
+      <router-link to="/" class="brand">
+        <img src="@/assets/images/logo/pocket-symbol-color.svg" alt="" class="brand-logo" />
+        <span class="brand-name">PoCket</span>
+      </router-link>
 
-      <!-- 우측 -->
-      <div class="login-right">
-        <div class="login-box fade-in-up">
-          <router-link to="/" class="back-link">← 홈으로</router-link>
+      <h1 class="brand-headline">제품을 검증할 현장을 만나세요</h1>
+
+      <div class="login-card fade-in-up">
+        <div class="login-box">
 
           <!-- 로그인 : 우리 화면에서 자격증명을 받아 인증 서버로 전달한다 -->
           <div v-if="!showRegister" class="section">
             <h3 class="section-title">로그인</h3>
-            <p class="section-desc">PoCket 계정으로 로그인합니다.</p>
+            <p class="section-desc">{{ loginDesc }}</p>
 
             <form class="form" @submit.prevent="handleLogin" novalidate>
               <div class="form-group">
@@ -106,6 +95,8 @@
 
         </div>
       </div>
+
+      <router-link to="/" class="back-link">← 홈으로</router-link>
     </div>
   </div>
 </template>
@@ -124,16 +115,36 @@ const router = useRouter()
 
 // /login 은 로그인, /register 는 회원가입. 같은 화면을 경로로 나눈다.
 const showRegister = computed(() => route.name === 'Register')
+
+/*
+ * 로그인이 필요해 튕겨 온 사람에게는 이유를 말해 준다.
+ * 게이트웨이가 익명 조회를 막기 때문에 '현장 둘러보기' 를 눌러도 여기로 온다.
+ * 아무 설명 없이 로그인 화면이 뜨면 잘못 눌렀다고 생각한다.
+ */
+const loginDesc = computed(() =>
+  typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+    ? '테스트베드를 보려면 로그인이 필요합니다. 로그인하면 보시던 곳으로 돌아갑니다.'
+    : 'PoCket 계정으로 로그인합니다.'
+)
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
 
 const loginForm = ref({ username: '', password: '' })
-const registerForm = ref({ name: '', email: '', password: '', role: 'STARTUP' })
+/*
+ * 랜딩의 '스타트업으로 시작하기' / '호스트로 시작하기' 가 ?role= 로 넘겨 준다.
+ * 포털이 좌우로 갈라 물어본 답을 여기서 이어받는다 — 다시 고르게 하지 않는다.
+ * 값은 반드시 확인한다. 주소창으로 아무 문자열이나 들어올 수 있다.
+ */
+const ROLES = ['STARTUP', 'HOST']
+const initialRole = ROLES.includes(String(route.query.role || '').toUpperCase())
+  ? String(route.query.role).toUpperCase()
+  : 'STARTUP'
+
+const registerForm = ref({ name: '', email: '', password: '', role: initialRole })
 
 const AUTH_SERVER_URL = import.meta.env.VITE_AUTH_SERVER_URL || 'http://localhost:8080'
 
-const features = ['AI 테스트베드 추천', '실증 신청·결제·확정', '실증 이력과 상호 평가']
 
 /**
  * 로그인
@@ -227,7 +238,7 @@ async function handleRegister() {
   try {
     await authApi.register(registerForm.value)
     success.value = '회원가입 완료! 로그인 화면으로 이동합니다.'
-    registerForm.value = { name: '', email: '', password: '', role: 'STARTUP' }
+    registerForm.value = { name: '', email: '', password: '', role: initialRole }
     setTimeout(() => router.push('/login'), 1500)
   } catch (e) {
     error.value = apiErrorMessage(e, '회원가입에 실패했습니다.', {
@@ -240,52 +251,79 @@ async function handleRegister() {
 </script>
 
 <style scoped>
+/* 좌우 반반 그리드를 걷어내고 화면 가운데 한 덩어리로 세운다.
+   배경은 body::before 의 브랜드색 orb 를 그대로 쓴다 — 로그인만 진한
+   그라디언트를 깔고 있어서 사이트의 나머지 화면과 따로 놀았다. */
 .login-page {
   min-height: 100vh;
   display: flex;
-  align-items: stretch;
-}
-.login-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 100%;
-  min-height: 100vh;
-}
-.login-left {
-  background: var(--gradient-brand-deep);
-  padding: 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-}
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand-logo { width: 40px; height: 40px; object-fit: contain; }
-.brand-name { font-size: 18px; font-weight: 700; color: #fff; }
-.brand-content h2 {
-  font-size: 32px; font-weight: 700; color: #fff;
-  line-height: 1.35; margin-bottom: 14px;
-}
-.brand-content p { font-size: 15px; color: rgba(255,255,255,0.75); margin-bottom: 28px; }
-.feature-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
-.feature-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: rgba(255,255,255,0.85); }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.6); flex-shrink: 0; }
-
-.login-right {
-  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px;
-  background: var(--color-bg-primary);
+  padding: 48px 24px;
 }
-.login-box { width: 100%; max-width: 400px; }
+
+.login-center {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.brand-logo { width: 36px; height: 36px; object-fit: contain; }
+.brand-name {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+
+.brand-headline {
+  margin-bottom: 26px;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+  text-align: center;
+  color: var(--color-text-primary);
+}
+
+/* 폼을 유리 카드에 담는다 — 목록·상세 카드와 같은 재질 */
+.login-card {
+  width: 100%;
+  padding: 32px 30px;
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-glass), 0 24px 60px rgba(36, 34, 73, 0.10);
+}
+.login-box { width: 100%; }
+
 .back-link {
   display: inline-block;
+  margin-top: 26px;
   font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-bottom: 32px;
+  color: var(--color-text-muted);
   transition: var(--transition);
 }
 .back-link:hover { color: var(--color-link); }
+
+@media (prefers-reduced-transparency: reduce) {
+  .login-card {
+    background: var(--color-bg-primary);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border);
+  }
+}
 
 .section { display: flex; flex-direction: column; gap: 16px; }
 .section-title { font-size: 22px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 4px; }
@@ -371,19 +409,11 @@ async function handleRegister() {
 }
 
 /* ── 반응형 ──────────────────────────────────────────────────
-   이 화면에도 폭 미디어쿼리가 없었다. 360/390px 에서 scrollWidth 가 456 이라
-   좌우 2단 그리드가 그대로 유지되며 밖으로 밀려 나갔다(범인: .login-right).
+   가운데 한 덩어리라 폭이 좁아져도 구조가 그대로다. 여백과 글자만 줄인다.
    로그인은 비로그인 방문자가 처음 만나는 화면이라 폰에서 깨지면 안 된다. */
-@media (max-width: 860px) {
-  .login-layout { grid-template-columns: 1fr; min-height: auto; }
-  /* 좌측 브랜드 패널은 소개용이다. 좁은 화면에서는 로그인 폼이 주인공이다. */
-  .login-left { padding: 32px 24px; gap: 24px; }
-  .brand-content h2 { font-size: 24px; }
-  .login-right { padding: 40px 24px; }
-}
-
 @media (max-width: 480px) {
-  .login-left { display: none; }
-  .login-right { padding: 32px 20px; min-height: 100vh; }
+  .login-page { padding: 32px 16px; }
+  .brand-headline { font-size: 21px; margin-bottom: 20px; }
+  .login-card { padding: 26px 20px; }
 }
 </style>
