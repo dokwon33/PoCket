@@ -87,8 +87,8 @@
               <div class="form-group">
                 <label class="form-label" for="reg-role">역할</label>
                 <select id="reg-role" v-model="registerForm.role" class="form-input">
-                  <option value="STUDENT">스타트업 — 실증할 제품이 있어요</option>
-                  <option value="INSTRUCTOR">테스트베드 호스트 — 현장을 제공해요</option>
+                  <option value="STARTUP">스타트업 — 실증할 제품이 있어요</option>
+                  <option value="HOST">테스트베드 호스트 — 현장을 제공해요</option>
                 </select>
               </div>
               <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
@@ -129,7 +129,7 @@ const error = ref('')
 const success = ref('')
 
 const loginForm = ref({ username: '', password: '' })
-const registerForm = ref({ name: '', email: '', password: '', role: 'STUDENT' })
+const registerForm = ref({ name: '', email: '', password: '', role: 'STARTUP' })
 
 const AUTH_SERVER_URL = import.meta.env.VITE_AUTH_SERVER_URL || 'http://localhost:8080'
 
@@ -227,7 +227,7 @@ async function handleRegister() {
   try {
     await authApi.register(registerForm.value)
     success.value = '회원가입 완료! 로그인 화면으로 이동합니다.'
-    registerForm.value = { name: '', email: '', password: '', role: 'STUDENT' }
+    registerForm.value = { name: '', email: '', password: '', role: 'STARTUP' }
     setTimeout(() => router.push('/login'), 1500)
   } catch (e) {
     error.value = apiErrorMessage(e, '회원가입에 실패했습니다.', {
