@@ -127,7 +127,7 @@ Kafka 비동기로 뺐습니다. 양쪽 모두 "처음 만나는 상대를 믿�
 
 | 템플릿 (제공) | PoCket | 처리 방식 |
 |---|---|---|
-| 강사 / 수강생 | 테스트베드 호스트 / 스타트업 | `role` 값을 `HOST`/`STARTUP`으로 변경 |
+| 강사 / 수강생 | 테스트베드 호스트 / 스타트업 | `role` 값(`INSTRUCTOR`/`STUDENT`) 그대로 |
 | 과목 등록 | 실증 슬롯 등록 | course-service 그대로 |
 | 강의 카테고리 | 산업군 | enum 값 유지, 화면 라벨만 치환 |
 | 수강신청 (`PENDING`) | 실증 신청 | 상태값 추가 없음 |
@@ -461,8 +461,8 @@ Auth Server가 자동 생성하는 계정 두 개로 시작할 수 있습니다.
 
 | 이메일 | 역할 | 용도 |
 |---|---|---|
-| `student@lecture.com` | STARTUP | 스타트업 (실증 신청) |
-| `instructor@lecture.com` | HOST | 호스트 (슬롯 등록) |
+| `student@lecture.com` | STUDENT | 스타트업 (실증 신청) |
+| `instructor@lecture.com` | INSTRUCTOR | 호스트 (슬롯 등록) |
 
 시드로 들어가는 호스트 계정 10개(`host.*@pocket.test`)는 카드에 이름을 표시하기 위한 데이터라
 로그인할 수 없습니다. 계정이 더 필요하면 회원가입 화면에서 만드세요.
