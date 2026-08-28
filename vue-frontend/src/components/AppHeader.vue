@@ -10,7 +10,14 @@
       <!-- 네비게이션 -->
       <nav class="nav-links" v-if="auth.isAuthenticated">
         <router-link to="/testbeds" class="nav-link" :class="{ active: $route.path.startsWith('/testbeds') }">테스트베드</router-link>
-        <router-link v-if="!host" to="/applications" class="nav-link" :class="{ active: $route.path === '/applications' }">내 실증</router-link>
+        <router-link v-if="!host" to="/applications" class="nav-link" :class="{ active: $route.path === '/applications' }">
+          내 실증
+          <!-- 평가는 저절로 쌓이지 않는다. 남길 차례가 있으면 여기서 먼저 말한다. -->
+          <span v-if="pendingReviewCount" class="nav-badge">
+            {{ pendingReviewCount }}
+            <span class="sr-only">건의 평가를 남길 차례입니다</span>
+          </span>
+        </router-link>
       </nav>
 
       <!-- 우측 액션 -->
@@ -31,17 +38,35 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useAuthStore } from '@/store/auth.js'
 import { useRouter } from 'vue-router'
 import { isHost } from '@/domain/pocket.js'
+import { clearPendingReviews, pendingReviewCount, primePendingReviews } from '@/domain/pendingReviews.js'
 
 const auth = useAuthStore()
 const router = useRouter()
 
 const host = computed(() => isHost(auth.user?.role))
 
+/*
+ * 헤더는 로그인한 모든 화면에 있으므로 여기서 한 번 받아 둔다.
+ * 사이드바도 같은 값을 쓰지만 요청은 하나만 나간다.
+ *
+ * 호스트에게는 부르지 않는다 — /me/pending 은 스타트업 신청 건만 훑어
+ * 호스트에게는 언제나 빈 배열이다. 뜻 없는 요청을 보내지 않는다.
+ */
+watch(
+  () => [auth.isAuthenticated, host.value],
+  ([signedIn, isHostUser]) => {
+    if (signedIn && !isHostUser) primePendingReviews()
+    else clearPendingReviews()
+  },
+  { immediate: true }
+)
+
 function handleLogout() {
+  clearPendingReviews()
   auth.logout()
 }
 </script>
@@ -113,6 +138,24 @@ function handleLogout() {
 .nav-link.active {
   color: var(--color-link);
   background: var(--color-primary-light);
+}
+/* 배지가 붙으면 글자와 함께 흐르도록 */
+.nav-link { display: inline-flex; align-items: center; gap: 7px; }
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 .header-actions {
   display: flex;

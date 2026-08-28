@@ -11,6 +11,11 @@
       >
         <Icon :name="item.icon" :size="19" class="si-icon" />
         {{ item.label }}
+        <!-- 평가는 저절로 쌓이지 않는다. 남길 차례가 있으면 메뉴에서 먼저 말한다. -->
+        <span v-if="item.badge" class="si-badge">
+          {{ item.badge }}
+          <span class="sr-only">건의 평가를 남길 차례입니다</span>
+        </span>
       </router-link>
     </div>
 
@@ -45,6 +50,7 @@ import { useRoute } from 'vue-router'
 import Icon from '@/components/Icon.vue'
 import { useAuthStore } from '@/store/auth.js'
 import { isHost } from '@/domain/pocket.js'
+import { pendingReviewCount } from '@/domain/pendingReviews.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -56,7 +62,7 @@ const menu = computed(() => [
   ...(host.value
     ? [{ to: '/testbeds/new', icon: 'plus', label: '실증 슬롯 등록' }]
     : [
-        { to: '/applications', icon: 'check', label: '내 실증 신청' },
+        { to: '/applications', icon: 'check', label: '내 실증 신청', badge: pendingReviewCount.value },
         // 결제는 신청한 쪽(스타트업)에만 남는다
         { to: '/payments', icon: 'document', label: '결제 내역' }
       ])
@@ -81,6 +87,23 @@ function isActive(item) {
   flex-direction: column;
   gap: 2px;
   margin-bottom: 8px;
+}
+
+.si-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .sidebar-label {

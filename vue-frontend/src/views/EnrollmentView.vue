@@ -92,6 +92,7 @@ import { authExpired } from '@/domain/session.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
 import { reviewApi } from '@/api/review.js'
+import { refreshPendingReviews } from '@/domain/pendingReviews.js'
 import { useAuthStore } from '@/store/auth.js'
 import { apiErrorMessage, category, categoryLabel, categoryStyle, enrollmentStatus } from '@/domain/pocket.js'
 import { hostName as resolveHost, primeHosts } from '@/domain/hosts.js'
@@ -157,6 +158,8 @@ function closeReview() {
 async function onReviewSaved() {
   closeReview()
   await loadReviews()
+  // 내비게이션의 '남길 차례' 배지도 같이 줄어야 한다
+  await refreshPendingReviews()
 }
 
 function slotOf(item) {
