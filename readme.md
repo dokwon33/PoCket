@@ -13,7 +13,8 @@
 
 **제공된 서비스는 최대한 그대로 두고, 필요한 기능은 새 서비스로 확장합니다.**
 게이트웨이와 인증 서버는 소스가 없어 수정 자체가 불가능하고, 나머지 4개는 소스가 있지만
-손대지 않는 것을 원칙으로 삼았습니다. 지금까지의 예외는 결제 금액 버그 수정 1건입니다.
+손대지 않는 것을 원칙으로 삼았습니다. 지금까지의 예외는 두 건으로, 결제 금액 버그 수정과
+역할 enum 을 도메인 언어(`HOST`/`STARTUP`)로 맞춘 것입니다.
 
 ---
 
@@ -602,12 +603,25 @@ API 명세서를 작성할 수 있습니다.
 **1. 제공된 백엔드는 되도록 수정하지 않는다.**
 게이트웨이와 인증 서버는 소스가 없어 아예 고칠 수 없습니다. 나머지 4개는 소스가 있지만,
 기능이 필요하면 기존 서비스를 고치는 대신 새 서비스를 옆에 붙이거나 화면에서 우회합니다.
-예외는 **명백한 버그**뿐입니다. 지금까지 한 건(`EnrollmentService` 의 결제 금액 하드코딩)을
-고쳤고, 이 경우 수정한 서비스는 이미지를 다시 빌드해야 반영됩니다.
+예외는 **명백한 버그와 도메인 언어 정합성**입니다. 지금까지 두 건을 고쳤습니다.
+
+| 대상 | 내용 | 재빌드가 필요한 서비스 |
+|---|---|---|
+| `EnrollmentService` | 결제 금액이 `99000` 으로 하드코딩되어 슬롯 가격과 무관하게 결제됨 | enrollment-service |
+| `User.Role` | `STUDENT`/`INSTRUCTOR` 를 `STARTUP`/`HOST` 로 변경. review-service 의 `reviewer_role` 과 표기가 통일됨 | user-service, course-service |
+
+수정한 서비스는 이미지를 다시 빌드해야 반영됩니다.
 
 ```bash
-docker compose -f docker-compose.build.yml build enrollment-service
-docker compose up -d enrollment-service
+docker compose -f docker-compose.build.yml build enrollment-service user-service course-service
+docker compose up -d enrollment-service user-service course-service
+```
+
+역할 값을 바꿨으므로 기존 볼륨의 `users.role` 도 갱신 대상입니다. 새로 시작하는 편이 안전합니다.
+
+```bash
+docker compose down -v && docker compose up -d
+docker exec -i lecturedb mariadb -umanager -pSqlDba-1 lecture_db < seed/pocket_seed.sql
 ```
 
 **2. 화면에 보이는 도메인 용어는 `pocket.js`에서만 정의한다.**
@@ -757,9 +771,25 @@ null로 주기 때문입니다. 백엔드를 고칠 수 없으므로 프론트�
 
 | 브랜치 | 내용 |
 |---|---|
-| `main` | 통합 브랜치. 두 feature 브랜치를 병합해 유지합니다. |
+| `main` | 통합 브랜치. **보호 규칙이 걸려 있어 직접 푸시할 수 없습니다** |
 | `feature/review-service` | 상호 평가 서비스 (백엔드) |
 | `feature/frontend-pocket-remap` | 도메인 리매핑, 디자인 시스템, 시드 (프론트엔드) |
+| `feature/ai-matching` | AI 실증 매칭 화면과 API 계약 |
+| `feature/enrollment-notification` | 내 실증 알림과 확정 건 표시 |
+| `fix/*` · `docs/*` | 버그 수정과 문서 작업 |
+
+### 기여 방법
+
+`main` 브랜치에 ruleset 이 걸려 있습니다. 직접 푸시는 차단되며 **PR 과 승인 1명**을 거쳐야 합니다.
+강제 푸시와 브랜치 삭제도 막혀 있고, 미해결 리뷰 코멘트가 남아 있으면 머지되지 않습니다.
+
+```bash
+git switch -c feature/작업이름
+# 작업 후
+git push -u origin feature/작업이름
+gh pr create --base main --fill
+# 팀원 1명이 승인하면 머지
+```
 
 | 문서 | 내용 |
 |---|---|
