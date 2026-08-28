@@ -148,9 +148,20 @@ const host = computed(() => isHost(auth.user?.role))
  */
 const heroActions = computed(() => {
   if (!auth.isAuthenticated) {
+    /*
+     * 비로그인일 때는 둘 다 회원가입으로 보낸다.
+     *
+     * 예전에는 '현장 둘러보기' 가 /testbeds 를 가리켰는데, 게이트웨이가 익명
+     * 조회를 401 로 막아 가드가 로그인 화면으로 되돌렸다. 라벨은 둘러보기라고
+     * 하는데 도착지는 로그인 화면이라 말과 결과가 어긋났다.
+     *
+     * 진입 포털이 이미 좌우로 갈라 "검증할 현장을 찾나요 / 먼저 써보고
+     * 싶으신가요" 를 물어본다. 그 답을 ?role= 로 넘겨 가입 폼의 역할을
+     * 미리 채운다. 두 버튼이 같은 곳으로 가되 의미는 다르다.
+     */
     return [
-      { to: '/testbeds', label: '현장 둘러보기', primary: true },
-      { to: '/register', label: '우리 현장 등록하기' }
+      { to: '/register?role=STUDENT', label: '스타트업으로 시작하기', primary: true },
+      { to: '/register?role=INSTRUCTOR', label: '호스트로 시작하기' }
     ]
   }
   if (host.value) {
@@ -165,21 +176,33 @@ const heroActions = computed(() => {
   ]
 })
 
-const cta = computed(() =>
-  host.value
-    ? {
-        title: '우리 현장을 실증 슬롯으로 열어보세요',
-        desc: '남는 시간대와 공간을 등록하면 스타트업이 찾아옵니다. 실증비도 받습니다.',
-        to: '/testbeds/new',
-        label: '실증 슬롯 등록하기'
-      }
-    : {
-        title: '검증할 현장부터 골라보세요',
-        desc: '조건을 보고, 신청하고, 결제하면 확정됩니다. 그 다음은 현장에서 확인하세요.',
-        to: '/testbeds',
-        label: '현장 둘러보기'
-      }
-)
+const cta = computed(() => {
+  if (host.value) {
+    return {
+      title: '우리 현장을 실증 슬롯으로 열어보세요',
+      desc: '남는 시간대와 공간을 등록하면 스타트업이 찾아옵니다. 실증비도 받습니다.',
+      to: '/testbeds/new',
+      label: '실증 슬롯 등록하기'
+    }
+  }
+
+  // 비로그인에게 /testbeds 를 권하면 로그인 화면으로 튕긴다. 가입으로 보낸다.
+  if (!auth.isAuthenticated) {
+    return {
+      title: '검증할 현장부터 골라보세요',
+      desc: '가입하면 산업군별 실증 슬롯을 모두 볼 수 있습니다.',
+      to: '/register?role=STUDENT',
+      label: '스타트업으로 시작하기'
+    }
+  }
+
+  return {
+    title: '검증할 현장부터 골라보세요',
+    desc: '조건을 보고, 신청하고, 결제하면 확정됩니다. 그 다음은 현장에서 확인하세요.',
+    to: '/testbeds',
+    label: '현장 둘러보기'
+  }
+})
 
 const SAMPLE_SLOTS = [
   { id:1, title:'강남 직영 카페 · 무인 주문 로봇 실증',   category:'BACKEND',      instructorName:'브루잉랩',      price:1200000 },
