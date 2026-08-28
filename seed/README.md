@@ -5,10 +5,15 @@
 
 ## 들어가는 내용
 
-| 항목 | 수량 | 비고 |
-|---|---|---|
-| 실증 슬롯 | 95건 | 산업군 8종 × 약 12건 |
-| 호스트 계정 | 10개 | 화면 표시 전용 (로그인 불가) |
+SQL 두 개로 나뉘어 있습니다. 슬롯이 먼저, 평가가 나중입니다.
+
+| 파일 | 항목 | 수량 | 비고 |
+|---|---|---|---|
+| `pocket_seed.sql` | 실증 슬롯 | 95건 | 산업군 8종 × 약 12건 |
+| | 호스트 계정 | 10개 | 화면 표시 전용 (로그인 불가) |
+| `pocket_reviews_seed.sql` | 평가 | 102건 | ★5 51 · ★4 36 · ★3 12 · ★2 3 |
+| | 신청 | 102건 | 평가가 참조할 대상 |
+| | 스타트업 계정 | 8개 | 화면 표시 전용 (로그인 불가) |
 
 모집 중 / 마감 상태가 섞여 있고, 실증 진행 건수는 0~44건, 실증비는 산업군별로 다른 구간에
 분포합니다. 목록·필터·추천 정렬을 실제 데이터로 확인하기 위한 구성입니다.
@@ -19,7 +24,11 @@
 
 ```bash
 docker exec -i lecturedb mariadb -umanager -pSqlDba-1 lecture_db < seed/pocket_seed.sql
+docker exec -i lecturedb mariadb -umanager -pSqlDba-1 lecture_db < seed/pocket_reviews_seed.sql
 ```
+
+**순서가 있습니다.** 평가는 슬롯을 참조하므로 슬롯을 먼저 넣어야 합니다.
+평가 시드는 여러 번 실행해도 중복되지 않습니다 — 이미 있는 것은 건너뜁니다.
 
 확인:
 
@@ -37,11 +46,16 @@ docker exec lecturedb mariadb -umanager -pSqlDba-1 lecture_db \
 
 ```bash
 docker exec lecturedb mariadb -umanager -pSqlDba-1 lecture_db -e "
+  DELETE FROM reviews;
+  DELETE FROM payments;
   DELETE FROM enrollments;
   DELETE FROM courses;
   ALTER TABLE courses AUTO_INCREMENT = 1;
 "
 ```
+
+시연 중 쌓인 신청·결제·평가만 지우고 슬롯은 남기고 싶다면 `seed/reset-demo.sql` 을 쓰세요.
+개발 서버가 떠 있으면 화면에서 `Ctrl + Alt(⌥) + D` 로 열리는 개발 패널에도 같은 버튼이 있습니다.
 
 그 다음 위 실행 명령을 다시 돌리면 됩니다.
 
@@ -51,6 +65,15 @@ docker exec lecturedb mariadb -umanager -pSqlDba-1 lecture_db -e "
 `password` 컬럼에 유효한 BCrypt 해시가 아니라 `LOGIN_DISABLED_SEED_ACCOUNT` 문자열이 들어갑니다.
 카드에 호스트 이름을 표시하기 위한 데이터일 뿐, 실제로 쓸 수 있는 계정을 만들지 않으려고 이렇게 했습니다.
 로그인이 필요하면 회원가입 화면에서 직접 만드세요.
+
+**평가 시드는 시드 슬롯만 건드립니다.**
+호스트 10~19번이 가진 슬롯(id 95 이하)에만 평가를 답니다. 직접 등록한 슬롯은 그대로 둡니다.
+슬롯 시드와 달리 여러 번 실행해도 안전합니다 — 신청은 `(user_id, course_id)` 로,
+평가는 `NOT EXISTS` 로 중복을 막습니다.
+
+칭찬만 넣지 않았습니다. 3점·2점 후기에 "담당자 연락이 늦었다", "현장 조건이 설명과 달랐다"
+같은 내용을 섞어, 슬롯 상세의 별점 분포가 실제로 의미 있게 보이도록 했습니다.
+후기 문구는 산업군별로 다릅니다.
 
 **`category` 값은 프론트 매핑표와 짝이 맞아야 합니다.**
 `vue-frontend/src/domain/pocket.js` 의 `CATEGORIES` 와 동일한 대응을 씁니다.

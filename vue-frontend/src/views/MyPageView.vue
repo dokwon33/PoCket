@@ -18,6 +18,24 @@
         </div>
 
         <!-- 받은 평가 : 역할과 무관하게 상대방이 남긴 평가 -->
+        <!-- 호스트에만 요약이 있어 역할 간 화면 밀도가 크게 차이났다 -->
+        <section v-if="!host" class="summary-section">
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="summary-label">신청한 실증</div>
+              <div class="summary-value">{{ myStats.total }}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">확정된 실증</div>
+              <div class="summary-value">{{ myStats.active }}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">결제한 실증비</div>
+              <div class="summary-value summary-money">₩{{ formatFee(myStats.paid) }}</div>
+            </div>
+          </div>
+        </section>
+
         <section class="reviews-section">
           <div class="section-head">
             <h3 class="section-title">{{ host ? '내 테스트베드에 대한 평가' : '받은 평가' }}</h3>
@@ -165,8 +183,8 @@
                   </div>
                 </div>
                 <div class="meta-box">
-                  <div class="meta-label">슬롯 ID</div>
-                  <div class="meta-value">#{{ course.id }}</div>
+                  <div class="meta-label">등록일</div>
+                  <div class="meta-value">{{ formatDate(course.createdAt) || '-' }}</div>
                 </div>
               </div>
 
@@ -212,12 +230,14 @@ import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
 import { authExpired } from '@/domain/session.js'
 import { useAuthStore } from '@/store/auth.js'
 import { enrollmentApi } from '@/api/enrollment.js'
+import { paymentApi } from '@/api/payment.js'
 import { courseApi } from '@/api/course.js'
 import { reviewApi } from '@/api/review.js'
 import {
   apiErrorMessage,
   categoryLabel,
   courseStatus,
+  formatFee,
   isHost,
   roleLabel,
   reviewerRoleLabel,
@@ -322,6 +342,34 @@ async function loadReviews() {
     reviewsError.value = apiErrorMessage(e, '평가를 불러오지 못했습니다.')
   } finally {
     reviewsLoading.value = false
+  }
+}
+
+/* 스타트업용 요약 — 호스트에만 요약 카드가 있어 화면 밀도가 크게 차이났다 */
+const myStats = ref({ total: 0, active: 0, paid: 0 })
+
+async function loadMyStats() {
+  const id = auth.user?.id
+  if (!id) return
+
+  const list = (res) =>
+    Array.isArray(res?.data?.data) ? res.data.data : Array.isArray(res?.data) ? res.data : []
+
+  const [enr, pay] = await Promise.all([
+    enrollmentApi.getMyEnrollments().catch(() => null),
+    paymentApi.listByUser(id).catch(() => null)
+  ])
+
+  const enrollments = list(enr)
+  const payments = list(pay)
+
+  myStats.value = {
+    total: enrollments.length,
+    active: enrollments.filter((e) => e.status === 'ACTIVE').length,
+    // 완료된 결제만 센다. 실패·취소 건까지 더하면 쓴 돈이 부풀려 보인다.
+    paid: payments
+      .filter((p) => p.status === 'COMPLETED')
+      .reduce((sum, p) => sum + Number(p.amount ?? 0), 0)
   }
 }
 
@@ -476,6 +524,7 @@ onMounted(async () => {
     instructorLoading.value = false
     // 추천 카드에 '신청함' 표시를 붙이기 위해
     primeMyEnrollments()
+    loadMyStats()
     await loadStudentRecommendations()
   }
 })
@@ -733,11 +782,18 @@ onMounted(async () => {
   width: 40%;
 }
 
+.summary-section {
+  margin-top: 32px;
+}
+/* 스타트업은 3칸, 호스트는 2칸이라 개수에 맞춰 늘어나게 둔다 */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(2, minmax(160px, 220px));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
   gap: 16px;
   margin-bottom: 20px;
+}
+.summary-section .summary-cards {
+  margin-bottom: 0;
 }
 
 .summary-card {
@@ -760,6 +816,14 @@ onMounted(async () => {
   font-size: 28px;
   font-weight: 700;
   color: var(--color-text-primary);
+}
+
+/* 금액은 자릿수가 길어 같은 크기로는 카드를 넘친다 */
+.summary-money {
+  font-size: 22px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .instructor-course-list {
