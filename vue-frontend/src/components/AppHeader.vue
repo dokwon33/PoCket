@@ -23,7 +23,7 @@
         </template>
         <template v-else>
           <router-link to="/login" class="btn btn-ghost btn-sm">로그인</router-link>
-          <router-link to="/register" class="btn btn-primary btn-sm">시작하기</router-link>
+          <router-link to="/register" class="btn btn-primary btn-sm">회원가입</router-link>
         </template>
       </div>
     </div>

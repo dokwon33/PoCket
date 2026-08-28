@@ -26,7 +26,7 @@
           <!-- 로그인 : 우리 화면에서 자격증명을 받아 인증 서버로 전달한다 -->
           <div v-if="!showRegister" class="section">
             <h3 class="section-title">로그인</h3>
-            <p class="section-desc">PoCket 계정으로 로그인합니다.</p>
+            <p class="section-desc">{{ loginDesc }}</p>
 
             <form class="form" @submit.prevent="handleLogin" novalidate>
               <div class="form-group">
@@ -124,6 +124,17 @@ const router = useRouter()
 
 // /login 은 로그인, /register 는 회원가입. 같은 화면을 경로로 나눈다.
 const showRegister = computed(() => route.name === 'Register')
+
+/*
+ * 로그인이 필요해 튕겨 온 사람에게는 이유를 말해 준다.
+ * 게이트웨이가 익명 조회를 막기 때문에 '현장 둘러보기' 를 눌러도 여기로 온다.
+ * 아무 설명 없이 로그인 화면이 뜨면 잘못 눌렀다고 생각한다.
+ */
+const loginDesc = computed(() =>
+  typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+    ? '테스트베드를 보려면 로그인이 필요합니다. 로그인하면 보시던 곳으로 돌아갑니다.'
+    : 'PoCket 계정으로 로그인합니다.'
+)
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
