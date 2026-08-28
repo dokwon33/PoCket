@@ -46,6 +46,13 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/match',
+    name: 'Match',
+    component: () => import('@/views/MatchView.vue'),
+    // 호스트는 현장을 제공하는 쪽이라 찾을 일이 없다
+    meta: { requiresAuth: true, startupOnly: true }
+  },
+  {
     path: '/applications',
     name: 'ApplicationList',
     component: () => import('@/views/EnrollmentView.vue'),

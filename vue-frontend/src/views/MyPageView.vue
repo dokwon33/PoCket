@@ -89,7 +89,7 @@
 
         <!-- 스타트업 화면 -->
         <section v-if="!host" class="recommend-section">
-          <h3 class="section-title">AI 추천 테스트베드</h3>
+          <h3 class="section-title">맞춤 추천 테스트베드</h3>
 
           <p v-if="recommendMessage" class="recommend-message">
             {{ recommendMessage }}
@@ -108,6 +108,24 @@
           <div v-else-if="recommendations.length" class="recommend-grid fade-in">
             <CourseCard v-for="c in recommendations" :key="c.id" :course="c" />
           </div>
+
+          <!--
+            이 추천은 최빈 산업군 + 실증 실적 기준의 규칙 기반이라 'AI' 로 부르지 않는다.
+            조건을 읽어 고르는 일은 AI 매칭이 한다 — 그쪽으로 넘어갈 길을 여기서 연다.
+          -->
+          <router-link v-if="recommendations.length" to="/match" class="next-panel">
+            <div class="next-body">
+              <h4 class="next-title">조건을 적어 찾고 싶으신가요</h4>
+              <p class="next-desc">
+                전원 · 네트워크 · 유동인구처럼 현장 설명에만 적힌 조건은 이 추천이 읽지 못합니다.
+                AI 매칭에서 문장으로 적으면 그 내용까지 대조해 고릅니다.
+              </p>
+            </div>
+            <span class="next-go">
+              <Icon name="sparkle" :size="15" />
+              AI 매칭
+            </span>
+          </router-link>
 
           <SessionExpiredNotice v-else-if="authExpired" />
 
@@ -224,6 +242,7 @@ import { ref, computed, onMounted } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import CourseCard from '@/components/CourseCard.vue'
+import Icon from '@/components/Icon.vue'
 import StarRating from '@/components/StarRating.vue'
 import ReviewModal from '@/components/ReviewModal.vue'
 import SessionExpiredNotice from '@/components/SessionExpiredNotice.vue'
@@ -731,6 +750,55 @@ onMounted(async () => {
   margin-bottom: 14px;
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+/* 다음 스프린트 자리 — 점선과 라벨로 '아직 없음' 이 아니라 '예정' 으로 읽히게 한다 */
+.next-panel {
+  margin-top: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-primary-light);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.next-panel:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.next-body { min-width: 0; }
+
+.next-go {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.next-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+
+.next-desc {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--color-text-muted);
 }
 
 .recommend-grid {

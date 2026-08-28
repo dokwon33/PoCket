@@ -10,6 +10,7 @@
       <!-- 네비게이션 -->
       <nav class="nav-links" v-if="auth.isAuthenticated">
         <router-link to="/testbeds" class="nav-link" :class="{ active: $route.path.startsWith('/testbeds') }">테스트베드</router-link>
+        <router-link v-if="!host" to="/match" class="nav-link" :class="{ active: $route.path === '/match' }">AI 매칭</router-link>
         <router-link v-if="!host" to="/applications" class="nav-link" :class="{ active: $route.path === '/applications' }">
           내 실증
           <!-- 평가는 저절로 쌓이지 않는다. 남길 차례가 있으면 여기서 먼저 말한다. -->

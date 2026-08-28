@@ -13,7 +13,7 @@
         <div class="panel-copy">
           <p class="eyebrow">FOR STARTUPS</p>
           <h2 class="headline">검증할 현장을<br />찾고 있나요?</h2>
-          <p class="desc">AI가 조건에 맞는 테스트베드를 추천해드려요.</p>
+          <p class="desc">조건에 맞는 테스트베드를 찾아드려요.</p>
         </div>
       </div>
     </div>

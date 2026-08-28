@@ -62,6 +62,7 @@ const menu = computed(() => [
   ...(host.value
     ? [{ to: '/testbeds/new', icon: 'plus', label: '실증 슬롯 등록' }]
     : [
+        { to: '/match', icon: 'sparkle', label: 'AI 매칭' },
         { to: '/applications', icon: 'check', label: '내 실증 신청', badge: pendingReviewCount.value },
         // 결제는 신청한 쪽(스타트업)에만 남는다
         { to: '/payments', icon: 'document', label: '결제 내역' }
