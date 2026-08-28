@@ -93,17 +93,17 @@ export function categoryStyle(code) {
  * 역할 — User.Role enum
  * ------------------------------------------------------------------ */
 export const ROLES = {
-  INSTRUCTOR: { label: TERMS.host, short: TERMS.hostShort },
-  STUDENT: { label: TERMS.startup, short: TERMS.startup }
+  HOST: { label: TERMS.host, short: TERMS.hostShort },
+  STARTUP: { label: TERMS.startup, short: TERMS.startup }
 }
 
 export function roleLabel(role) {
   return ROLES[role]?.label || '알 수 없음'
 }
 
-export const isHost = (role) => role === 'INSTRUCTOR'
+export const isHost = (role) => role === 'HOST'
 
-/** review-service 의 reviewerRole 은 User.Role 과 값이 다르다 (HOST / STARTUP) */
+/** review-service 의 reviewerRole 은 User.Role 과 값이 같다 (HOST / STARTUP 통일) */
 export function reviewerRoleLabel(role) {
   return role === 'HOST' ? TERMS.hostShort : TERMS.startup
 }
