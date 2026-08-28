@@ -43,11 +43,17 @@ public class EnrollmentService {
             throw new IllegalArgumentException("이미 수강신청한 강의입니다");
         }
 
+        // 슬롯마다 실증비가 다르므로 course-service에서 실제 가격을 가져온다.
+        // PENDING 생성 전에 조회해야 가격 조회 실패 시 결제 없는 신청이 남지 않는다.
+        Map<String, Object> course = courseServiceClient.getCourse(courseId);
+        BigDecimal amount = toBigDecimal(course.get("price"));
+
         Enrollment enrollment = enrollmentWriteService.createPendingEnrollment(userId, courseId);
 
-        paymentServiceClient.requestPayment(userId, courseId, BigDecimal.valueOf(99000));
+        paymentServiceClient.requestPayment(userId, courseId, amount);
 
-        log.info("[EnrollmentService] 수강신청 완료 (결제 대기) - enrollmentId: {}", enrollment.getId());
+        log.info("[EnrollmentService] 수강신청 완료 (결제 대기) - enrollmentId: {}, amount: {}",
+                enrollment.getId(), amount);
         return EnrollmentDto.EnrollmentResponse.from(enrollment);
     }
 
@@ -152,6 +158,19 @@ public class EnrollmentService {
         if (value == null) return null;
         if (value instanceof Number number) return number.intValue();
         return Integer.parseInt(value.toString());
+    }
+
+    /**
+     * 금액 변환용.
+     * price는 DECIMAL(10,2)이므로 toInteger를 쓰면 소수점이 잘린다.
+     * double을 거치면 부동소수점 오차가 섞이므로 문자열을 경유해 BigDecimal로 만든다.
+     */
+    private BigDecimal toBigDecimal(Object value) {
+        if (value == null) {
+            throw new IllegalStateException("강의 가격 정보가 없습니다");
+        }
+        if (value instanceof BigDecimal decimal) return decimal;
+        return new BigDecimal(String.valueOf(value));
     }
 
     private String firstNonNull(String... values) {
