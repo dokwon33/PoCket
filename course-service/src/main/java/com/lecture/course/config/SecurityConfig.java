@@ -56,8 +56,8 @@ public class SecurityConfig {
 //                 .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/**").permitAll()
 //                 // 내부 서비스 호출 (Client Credentials)
 //                 .requestMatchers("/api/courses/internal/**").hasAuthority("SCOPE_service.read")
-//                 // 실증 슬롯 등록은 HOST만
-//                 .requestMatchers(HttpMethod.POST, "/api/courses").hasAuthority("ROLE_HOST")
+//                 // 강의 등록은 INSTRUCTOR만
+//                 .requestMatchers(HttpMethod.POST, "/api/courses").hasAuthority("ROLE_INSTRUCTOR")
 //                 .anyRequest().authenticated()
 //             )
 //             .oauth2ResourceServer(oauth2 -> oauth2

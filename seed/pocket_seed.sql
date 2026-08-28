@@ -17,16 +17,16 @@
 
 -- 표시용 호스트 계정 (이미 있으면 건너뜀)
 INSERT IGNORE INTO users (id, email, password, name, role, created_at, updated_at) VALUES
-  (10, 'host.brewinglab@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '브루잉랩', 'HOST', NOW(6), NOW(6)),
-  (11, 'host.retailpartners@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '리테일파트너스', 'HOST', NOW(6), NOW(6)),
-  (12, 'host.hansung@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '한성로지스', 'HOST', NOW(6), NOW(6)),
-  (13, 'host.miraemed@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '미래의료원', 'HOST', NOW(6), NOW(6)),
-  (14, 'host.workspacek@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '워크스페이스K', 'HOST', NOW(6), NOW(6)),
-  (15, 'host.safeguard@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '세이프가드', 'HOST', NOW(6), NOW(6)),
-  (16, 'host.cloudcenter@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '클라우드센터', 'HOST', NOW(6), NOW(6)),
-  (17, 'host.citymobility@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '도심모빌리티', 'HOST', NOW(6), NOW(6)),
-  (18, 'host.greenfood@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '그린푸드컴퍼니', 'HOST', NOW(6), NOW(6)),
-  (19, 'host.seoulliving@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '서울리빙랩', 'HOST', NOW(6), NOW(6));
+  (10, 'host.brewinglab@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '브루잉랩', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (11, 'host.retailpartners@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '리테일파트너스', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (12, 'host.hansung@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '한성로지스', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (13, 'host.miraemed@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '미래의료원', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (14, 'host.workspacek@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '워크스페이스K', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (15, 'host.safeguard@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '세이프가드', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (16, 'host.cloudcenter@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '클라우드센터', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (17, 'host.citymobility@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '도심모빌리티', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (18, 'host.greenfood@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '그린푸드컴퍼니', 'INSTRUCTOR', NOW(6), NOW(6)),
+  (19, 'host.seoulliving@pocket.test', 'LOGIN_DISABLED_SEED_ACCOUNT', '서울리빙랩', 'INSTRUCTOR', NOW(6), NOW(6));
 
 -- 실증 슬롯
 INSERT INTO courses (title, description, category, price, instructor_id, enrollment_count, status, created_at, updated_at) VALUES

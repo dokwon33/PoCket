@@ -76,8 +76,8 @@
               <div class="form-group">
                 <label class="form-label" for="reg-role">역할</label>
                 <select id="reg-role" v-model="registerForm.role" class="form-input">
-                  <option value="STARTUP">스타트업 — 실증할 제품이 있어요</option>
-                  <option value="HOST">테스트베드 호스트 — 현장을 제공해요</option>
+                  <option value="STUDENT">스타트업 — 실증할 제품이 있어요</option>
+                  <option value="INSTRUCTOR">테스트베드 호스트 — 현장을 제공해요</option>
                 </select>
               </div>
               <div v-show="error" class="error-msg" role="alert">{{ error }}</div>
@@ -136,10 +136,10 @@ const loginForm = ref({ username: '', password: '' })
  * 포털이 좌우로 갈라 물어본 답을 여기서 이어받는다 — 다시 고르게 하지 않는다.
  * 값은 반드시 확인한다. 주소창으로 아무 문자열이나 들어올 수 있다.
  */
-const ROLES = ['STARTUP', 'HOST']
+const ROLES = ['STUDENT', 'INSTRUCTOR']
 const initialRole = ROLES.includes(String(route.query.role || '').toUpperCase())
   ? String(route.query.role).toUpperCase()
-  : 'STARTUP'
+  : 'STUDENT'
 
 const registerForm = ref({ name: '', email: '', password: '', role: initialRole })
 
