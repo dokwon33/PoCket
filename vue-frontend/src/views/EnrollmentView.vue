@@ -21,39 +21,97 @@
         />
 
         <div v-else-if="enrollments.length" class="enrollment-list fade-in">
-          <div v-for="item in enrollments" :key="item.id" class="enrollment-card">
-            <SlotThumb class="enroll-thumb" :course="slotOf(item)" :icon-size="30" />
+          <div
+            v-for="item in enrollments"
+            :key="item.id"
+            class="enrollment-card"
+            :class="{ unseen: isUnseen(item), open: isOpen(item) }"
+          >
+            <!--
+              카드 머리를 눌러 펼친다. 펼치는 순간 '확인함' 으로 기록되고
+              내비게이션 배지가 그만큼 줄어든다.
+              button 으로 감싸야 키보드(Enter·Space)로도 열린다.
+            -->
+            <button
+              type="button"
+              class="enroll-head"
+              :aria-expanded="isOpen(item)"
+              :aria-controls="`enroll-detail-${item.id}`"
+              @click="toggle(item)"
+            >
+              <SlotThumb class="enroll-thumb" :course="slotOf(item)" :icon-size="30" />
 
-            <div class="enroll-info">
-              <span class="badge" :style="categoryStyle(slotOf(item).category)">
-                {{ categoryLabel(slotOf(item).category) }}
-              </span>
-              <h3 class="enroll-title">{{ slotOf(item).title || item.course?.title }}</h3>
-              <p class="enroll-instructor">호스트: {{ resolveHost(slotOf(item)) }}</p>
-            </div>
-
-            <div class="enroll-status">
-              <span :class="['status-badge', `status-${enrollmentStatus(item.status).tone}`]">
-                {{ enrollmentStatus(item.status).label }}
-              </span>
-
-              <!-- 확정된 실증 건만 평가할 수 있다 -->
-              <div v-if="writtenOf(item)" class="review-done">
-                <StarRating :model-value="writtenOf(item).rating" readonly :size="15" />
-                <button type="button" class="text-btn" @click="openReview(item)">평가 수정</button>
+              <div class="enroll-info">
+                <div class="enroll-tags">
+                  <span class="badge" :style="categoryStyle(slotOf(item).category)">
+                    {{ categoryLabel(slotOf(item).category) }}
+                  </span>
+                  <!-- 확인 전인 확정 건임을 카드에서도 알린다 -->
+                  <span v-if="isUnseen(item)" class="new-tag">확인 전</span>
+                </div>
+                <h3 class="enroll-title">{{ slotOf(item).title || item.course?.title }}</h3>
+                <p class="enroll-instructor">호스트: {{ resolveHost(slotOf(item)) }}</p>
               </div>
-              <button
-                v-else-if="pendingOf(item)"
-                type="button"
-                class="btn btn-primary btn-sm"
-                @click="openReview(item)"
-              >
-                평가하기
-              </button>
 
-              <router-link :to="`/testbeds/${item.courseId}`" class="btn btn-ghost btn-sm">
-                슬롯 보기
-              </router-link>
+              <div class="enroll-status">
+                <span :class="['status-badge', `status-${enrollmentStatus(item.status).tone}`]">
+                  {{ enrollmentStatus(item.status).label }}
+                </span>
+                <!-- 배지가 '확인' 기준으로 바뀌었으므로, 평가 유도는 여기서 맡는다 -->
+                <span v-if="pendingOf(item) && !writtenOf(item)" class="await-review">평가 대기</span>
+                <Icon name="chevron" :size="18" class="chev" />
+              </div>
+            </button>
+
+            <!-- 상세 -->
+            <div v-if="isOpen(item)" :id="`enroll-detail-${item.id}`" class="enroll-detail">
+              <dl class="detail-grid">
+                <div class="detail-item">
+                  <dt>신청일</dt>
+                  <dd>{{ formatDate(item.createdAt) || '-' }}</dd>
+                </div>
+                <div class="detail-item">
+                  <dt>실증비</dt>
+                  <dd>₩{{ formatFee(paymentOf(item)?.amount ?? slotOf(item).price) }}</dd>
+                </div>
+                <div class="detail-item">
+                  <dt>결제 상태</dt>
+                  <dd>{{ paymentOf(item) ? paymentStatus(paymentOf(item).status).label : '조회 중' }}</dd>
+                </div>
+                <div class="detail-item">
+                  <dt>산업군</dt>
+                  <dd>{{ categoryLabel(slotOf(item).category) }}</dd>
+                </div>
+              </dl>
+
+              <p v-if="slotOf(item).description" class="detail-desc">
+                {{ slotOf(item).description }}
+              </p>
+
+              <div class="detail-actions">
+                <span v-if="pendingOf(item) && !writtenOf(item)" class="detail-hint">
+                  실증이 끝나면 평가를 남겨 주세요. 다음 사람이 이 현장을 고를 근거가 됩니다.
+                </span>
+
+                <div class="detail-buttons">
+                  <div v-if="writtenOf(item)" class="review-done">
+                    <StarRating :model-value="writtenOf(item).rating" readonly :size="15" />
+                    <button type="button" class="text-btn" @click="openReview(item)">평가 수정</button>
+                  </div>
+                  <button
+                    v-else-if="pendingOf(item)"
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    @click="openReview(item)"
+                  >
+                    평가하기
+                  </button>
+
+                  <router-link :to="`/testbeds/${item.courseId}`" class="btn btn-ghost btn-sm">
+                    슬롯 보기
+                  </router-link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -93,8 +151,10 @@ import { enrollmentApi } from '@/api/enrollment.js'
 import { courseApi } from '@/api/course.js'
 import { reviewApi } from '@/api/review.js'
 import { refreshPendingReviews } from '@/domain/pendingReviews.js'
+import { isSeen, loadSeen, markSeen } from '@/domain/seenEnrollments.js'
+import { paymentApi } from '@/api/payment.js'
 import { useAuthStore } from '@/store/auth.js'
-import { apiErrorMessage, category, categoryLabel, categoryStyle, enrollmentStatus } from '@/domain/pocket.js'
+import { apiErrorMessage, category, categoryLabel, categoryStyle, enrollmentStatus, formatFee, paymentStatus } from '@/domain/pocket.js'
 import { hostName as resolveHost, primeHosts } from '@/domain/hosts.js'
 
 const auth = useAuthStore()
@@ -124,6 +184,53 @@ const reviewExisting = ref(null)
 
 const pendingOf = (item) => pending.value[item?.id] || null
 const writtenOf = (item) => written.value[item?.id] || null
+
+/* ── 펼침과 '확인함' ──────────────────────────────────────
+   카드를 펼치는 순간 확인한 것으로 기록한다. 그 기록이 내비게이션 배지를 줄인다.
+   접어도 다시 늘어나지는 않는다 — 이미 봤기 때문이다. */
+const openIds = ref(new Set())
+
+const isOpen = (item) => openIds.value.has(item?.id)
+
+/** 확정됐는데 아직 확인하지 않은 건 */
+const isUnseen = (item) =>
+  Boolean(pendingOf(item)) && !isSeen(item?.id)
+
+function toggle(item) {
+  const next = new Set(openIds.value)
+  if (next.has(item.id)) next.delete(item.id)
+  else {
+    next.add(item.id)
+    // 확정 건만 알림 대상이다. 결제 대기 중인 건은 셀 이유가 없다.
+    if (pendingOf(item)) markSeen(item.id)
+  }
+  openIds.value = next
+}
+
+/* ── 결제 내역 (상세에 금액·상태를 보여주기 위해) ── */
+const payments = ref({})
+const paymentOf = (item) => payments.value[item?.courseId] || null
+
+async function loadPayments() {
+  if (!auth.user?.id) return
+  try {
+    const res = await paymentApi.listByUser(auth.user.id)
+    const list = Array.isArray(res.data) ? res.data : res.data?.data || []
+    // courseId 로 묶는다. 같은 슬롯을 두 번 결제할 일은 없다.
+    payments.value = Object.fromEntries(list.map((p) => [p.courseId, p]))
+  } catch (e) {
+    // 상세의 금액 칸만 비고 나머지는 그대로 동작한다
+    console.warn('[Enrollment] 결제 내역 조회 실패:', e?.response?.status)
+  }
+}
+
+function formatDate(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
 
 async function loadReviews() {
   const [p, w] = await Promise.all([
@@ -198,7 +305,7 @@ async function load() {
     } else {
       enrollments.value = []
     }
-    await Promise.all([fillSlots(enrollments.value), loadReviews()])
+    await Promise.all([fillSlots(enrollments.value), loadReviews(), loadPayments()])
   } catch (e) {
     console.error('[EnrollmentView] failed to load enrollments:', e)
     enrollments.value = []
@@ -209,7 +316,11 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  // 이 화면에 직접 들어온 경우에도 확인 목록이 있어야 '확인 전' 표시가 맞는다
+  loadSeen(auth.user?.id)
+  load()
+})
 </script>
 
 <style scoped>
@@ -244,21 +355,128 @@ onMounted(load)
 }
 
 .enrollment-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   box-shadow: var(--shadow-glass);
   border-radius: var(--radius-xl);
-  padding: 16px;
+  overflow: hidden;
   transition: var(--transition);
 }
 
 .enrollment-card:hover {
   box-shadow: var(--shadow-sm);
+}
+
+/* 확인 전인 확정 건 — 색만으로 알리지 않고 '확인 전' 글자를 같이 붙인다 */
+.enrollment-card.unseen {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glass), inset 0 0 0 1px var(--color-primary);
+}
+
+/* 카드 머리 전체가 버튼이다. 기본 버튼 모양을 지우고 카드처럼 보이게 한다. */
+.enroll-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.enroll-head:hover { background: rgba(255, 255, 255, 0.35); }
+
+.enroll-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.new-tag {
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.await-review {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.chev {
+  color: var(--color-text-muted);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.enrollment-card.open .chev { transform: rotate(180deg); }
+
+/* 상세 */
+.enroll-detail {
+  padding: 4px 20px 18px 20px;
+  border-top: 1px solid var(--glass-edge);
+  margin-top: -2px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 16px 0 14px;
+}
+
+.detail-item dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 5px;
+}
+.detail-item dd {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.detail-desc {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-tertiary);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.detail-actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.detail-hint {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+.detail-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+@media (max-width: 720px) {
+  .detail-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 .enroll-thumb {

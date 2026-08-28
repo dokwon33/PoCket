@@ -1,21 +1,32 @@
 /**
- * 남길 차례인 평가 건수
+ * 아직 확인하지 않은 확정 실증 건수
  *
- * 양면 시장에서 평가는 저절로 쌓이지 않는다. 실증이 끝나도 사용자가 평가
- * 화면까지 스스로 찾아가지 않으면 후기는 영영 비어 있고, 다음 사람이 장소를
- * 고를 근거도 없다. 그래서 "남길 차례" 를 내비게이션이 먼저 말한다.
+ * 실증이 확정되면 사용자가 알아야 한다. 결제가 끝났고 현장에 나갈 차례라는
+ * 뜻이기 때문이다. 그래서 내비게이션에 건수를 띄운다.
  *
- * GET /api/reviews/me/pending 은 이미 있는 API 다 (내 실증 화면에서만 쓰고 있었다).
- * 백엔드는 그대로 두고 호출 지점만 넓혔다.
+ * 기준이 '평가를 남겼는가' 가 아니라 **'확인했는가'** 인 이유:
+ * 앞의 기준으로는 확정 내용을 이미 본 뒤에도 평가를 쓰기 전까지 숫자가 내려가지
+ * 않았다. 알림이 아니라 밀린 숙제 표시가 된다. 알림은 확인하면 꺼져야 한다.
+ * 평가 유도는 '내 실증' 카드에 남는 '평가 대기' 표시가 맡는다.
  *
- * 이 API 는 설계상 스타트업 전용이다. review_service.get_pending 이 자기
- * 신청 건만 훑고 호스트가 등록한 슬롯은 건너뛰므로, 호스트 계정에서는 항상
- * 빈 배열이 온다. 배지도 스타트업에게만 보여준다.
+ * GET /api/reviews/me/pending 은 이미 있는 API 다. 이 API 는 설계상 스타트업
+ * 전용이라(review_service.get_pending 이 자기 신청 건만 훑는다) 호스트에게는
+ * 언제나 빈 배열이 온다. 배지도 스타트업에게만 보여준다.
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { reviewApi } from '@/api/review.js'
+import { seenIds } from '@/domain/seenEnrollments.js'
 
-export const pendingReviewCount = ref(0)
+/** 평가를 남기지 않은 확정 건의 enrollmentId 목록 (확인 여부와 무관) */
+export const pendingEnrollmentIds = ref([])
+
+/**
+ * 배지에 찍히는 수 — 확정됐고 아직 **확인하지 않은** 건.
+ * 확인 목록이 바뀌면 이 값도 따라 바뀐다.
+ */
+export const pendingReviewCount = computed(
+  () => pendingEnrollmentIds.value.filter((id) => !seenIds.value.has(String(id))).length
+)
 
 const loaded = ref(false)
 let inflight = null
@@ -36,12 +47,14 @@ export function primePendingReviews({ force = false } = {}) {
     .myPending()
     .then((res) => {
       const list = Array.isArray(res.data) ? res.data : res.data?.data
-      pendingReviewCount.value = Array.isArray(list) ? list.length : 0
+      pendingEnrollmentIds.value = Array.isArray(list)
+        ? list.map((r) => r?.enrollmentId).filter((v) => v != null)
+        : []
       loaded.value = true
     })
     .catch((e) => {
-      pendingReviewCount.value = 0
-      console.warn('[PoCket] 평가 대기 건수 조회 실패:', e?.response?.status)
+      pendingEnrollmentIds.value = []
+      console.warn('[PoCket] 확정 실증 건수 조회 실패:', e?.response?.status)
     })
     .finally(() => {
       inflight = null
@@ -50,14 +63,14 @@ export function primePendingReviews({ force = false } = {}) {
   return inflight
 }
 
-/** 평가를 남기거나 지운 직후처럼 숫자가 달라졌을 때 */
+/** 평가를 남기거나 지운 직후처럼 목록이 달라졌을 때 */
 export function refreshPendingReviews() {
   return primePendingReviews({ force: true })
 }
 
 /** 로그아웃 시 다음 사용자에게 남지 않도록 */
 export function clearPendingReviews() {
-  pendingReviewCount.value = 0
+  pendingEnrollmentIds.value = []
   loaded.value = false
   inflight = null
 }
