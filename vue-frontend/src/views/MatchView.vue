@@ -13,8 +13,7 @@
             </h1>
             <p class="page-subtitle">
               산업군 여덟 칸으로는 담기지 않는 조건이 있습니다.
-              전원 · 네트워크 · 유동인구 · 설치 조건처럼 현장 설명에만 적힌 내용을 읽어
-              맞는 곳을 찾아 드립니다.
+              적어주신 내용을 읽고 적합한 장소를 추천해드립니다.
             </p>
           </div>
         </div>
@@ -50,14 +49,6 @@
             <button type="submit" class="btn btn-primary ask-btn" :disabled="loading || !query.trim()">
               <Icon name="sparkle" :size="16" />
               {{ loading ? '현장을 읽는 중…' : '현장 찾기' }}
-            </button>
-          </div>
-
-          <!-- 무엇을 적어야 할지 모르는 사람을 위한 출발점 -->
-          <div v-if="!ran" class="examples">
-            <span class="ex-label">예시</span>
-            <button v-for="(ex, i) in EXAMPLES" :key="i" type="button" class="ex-chip" @click="useExample(ex)">
-              {{ ex.short }}
             </button>
           </div>
         </form>
@@ -132,27 +123,6 @@ const MAX_QUERY = 1000
 const PLACEHOLDER =
   '예) 무인 주문 로봇을 3개월간 검증하려 합니다. 220V 전원과 유선 인터넷이 필요하고, 하루 방문객 300명 이상인 매장이면 좋겠습니다.'
 
-const EXAMPLES = [
-  {
-    short: '무인 주문 로봇',
-    query:
-      '무인 주문 로봇을 3개월간 검증하려 합니다. 220V 전원과 유선 인터넷이 필요하고, 하루 방문객 300명 이상인 매장이면 좋겠습니다.',
-    budget: 3000000,
-    months: 3
-  },
-  {
-    short: '천장형 카메라',
-    query: '천장에 카메라를 설치해 동선을 분석하려 합니다. 영상 데이터를 받을 수 있어야 합니다.',
-    budget: 5000000,
-    months: 2
-  },
-  {
-    short: '스마트 진열대',
-    query: '스마트 진열대를 매장에 놓고 판매 데이터를 비교하려 합니다. 진열 면적이 확보되어야 합니다.',
-    budget: 2500000,
-    months: 6
-  }
-]
 
 /** 모델 호출은 2~3초가 걸린다. 침묵하면 멈춘 것처럼 보인다. */
 const PROGRESS_STEPS = [
@@ -169,7 +139,6 @@ const budget = ref('')
 const months = ref('')
 
 const loading = ref(false)
-const ran = ref(false)
 const results = ref(null)
 const formError = ref('')
 const fellBack = ref(false)
@@ -189,12 +158,6 @@ const fallbackSlots = computed(() =>
     .sort((a, b) => Number(b.enrollmentCount ?? 0) - Number(a.enrollmentCount ?? 0))
     .slice(0, 3)
 )
-
-function useExample(ex) {
-  query.value = ex.query
-  budget.value = String(ex.budget)
-  months.value = String(ex.months)
-}
 
 function startProgress() {
   progressStep.value = 0
@@ -238,15 +201,13 @@ async function run() {
       throw Object.assign(new Error('bad shape'), { shape: true })
     }
     results.value = res
-    ran.value = true
   } catch (e) {
     const status = e?.response?.status
 
     // 503 은 계약에 있는 상황이다 — 오류가 아니라 폴백으로 다룬다
     if (status === 503) {
       fellBack.value = true
-      ran.value = true
-    } else if (e.shape) {
+      } else if (e.shape) {
       formError.value = '응답 형식이 예상과 다릅니다. 백엔드 명세를 확인해 주세요.'
     } else if (status === 429) {
       const wait = e?.response?.data?.retryAfterSec
@@ -403,32 +364,6 @@ onBeforeUnmount(stopProgress)
   white-space: nowrap;
 }
 
-.examples {
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.ex-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
-.ex-chip {
-  padding: 6px 13px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-primary);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  transition: var(--transition);
-}
-.ex-chip:hover {
-  border-color: var(--color-primary);
-  color: var(--color-link);
-}
 
 .form-error {
   margin-top: 12px;
