@@ -218,6 +218,7 @@ import { authExpired } from '@/domain/session.js'
 import { useCourseStore } from '@/store/course.js'
 import { enrollmentApi } from '@/api/enrollment.js'
 import { refreshMyEnrollments } from '@/domain/myEnrollments.js'
+import { rememberSlot } from '@/domain/recentSlots.js'
 import { useAuthStore } from '@/store/auth.js'
 import {
   category,
@@ -638,6 +639,10 @@ async function loadSlot(id) {
   reputation.value = null
 
   await courseStore.fetchCourse(id)
+
+  // 목록으로 돌아왔을 때 다시 찾지 않도록 남긴다 (이 브라우저에만 남는다)
+  if (courseStore.selectedCourse) rememberSlot(courseStore.selectedCourse)
+
   loadReputation(courseStore.selectedCourse?.instructorId)
   loadSlotReviews()
   loadPeers()

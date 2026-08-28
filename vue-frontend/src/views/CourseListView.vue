@@ -27,6 +27,29 @@
           </router-link>
         </div>
 
+        <!-- 최근 본 슬롯 : 목록으로 돌아왔을 때 보던 곳을 다시 찾지 않아도 되게 -->
+        <section v-if="recentSlots.length" class="recent-section">
+          <div class="recent-head">
+            <h2 class="recent-title">
+              <Icon name="clock" :size="14" />
+              최근 본 슬롯
+            </h2>
+            <button type="button" class="text-btn" @click="clearRecentSlots()">지우기</button>
+          </div>
+
+          <ul class="recent-list">
+            <li v-for="item in recentSlots" :key="item.id">
+              <router-link :to="`/testbeds/${item.id}`" class="recent-item">
+                <span class="badge" :style="categoryStyle(item.category)">
+                  {{ categoryLabel(item.category) }}
+                </span>
+                <span class="recent-name">{{ item.title }}</span>
+                <span class="recent-fee">₩{{ formatFee(item.price) }}</span>
+              </router-link>
+            </li>
+          </ul>
+        </section>
+
         <!-- 검색 · 정렬 -->
         <div class="explore-bar">
           <div class="search-box">
@@ -123,6 +146,7 @@
             v-for="slot in filteredSlots"
             :key="slot.id"
             :course="slot"
+            @compare-full="warnCompareFull"
           />
         </div>
 
@@ -130,7 +154,7 @@
         <div v-else class="empty-state">
           <template v-if="filtersActive">
             <p>조건에 맞는 실증 슬롯이 없습니다.</p>
-            <button type="button" class="btn btn-secondary empty-action-btn" @click="courseStore.resetFilters()">
+            <button type="button" class="btn btn-outline empty-action-btn" @click="courseStore.resetFilters()">
               조건 초기화
             </button>
           </template>
@@ -147,13 +171,36 @@
             </router-link>
           </template>
         </div>
+
+        <!-- 비교함 : 담은 것이 있을 때만 나타나 화면 아래에 붙어 따라온다 -->
+        <div v-if="compareCount" class="compare-bar" role="region" aria-label="비교함">
+          <div class="compare-status">
+            <strong class="compare-count">비교함 {{ compareCount }}/{{ COMPARE_MAX }}</strong>
+            <span v-if="compareWarn" class="compare-warn" role="status">{{ compareWarn }}</span>
+            <span v-else-if="compareCount < 2" class="compare-hint">하나 더 담으면 비교할 수 있습니다</span>
+          </div>
+
+          <div class="compare-actions">
+            <button type="button" class="text-btn" @click="clearCompare()">비우기</button>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              :disabled="compareCount < 2"
+              @click="showCompare = true"
+            >
+              비교하기
+            </button>
+          </div>
+        </div>
       </main>
     </div>
+
+    <CompareSheet v-if="showCompare" :peers="courses" @close="showCompare = false" />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { primeMyEnrollments } from '@/domain/myEnrollments.js'
@@ -173,8 +220,11 @@ import {
   PRICE_BANDS
 } from '@/store/course.js'
 import { useAuthStore } from '@/store/auth.js'
-import { isHost } from '@/domain/pocket.js'
+import { categoryLabel, categoryStyle, formatFee, isHost } from '@/domain/pocket.js'
 import { matchesPrice, matchesQuery, sortSlots } from '@/domain/slotSearch.js'
+import { clearRecentSlots, recentSlots } from '@/domain/recentSlots.js'
+import { COMPARE_MAX, clearCompare, compareCount } from '@/domain/compare.js'
+import CompareSheet from '@/components/CompareSheet.vue'
 
 const courseStore = useCourseStore()
 const auth = useAuthStore()
@@ -243,6 +293,20 @@ const filtersActive = computed(
 function selectCategory(code) {
   courseStore.setCategory(code)
 }
+
+/* ── 비교함 ── */
+const showCompare = ref(false)
+const compareWarn = ref('')
+let warnTimer = null
+
+/** 가득 찬 비교함에 더 담으려 했을 때. 알리지 않으면 버튼이 고장 난 것으로 읽힌다. */
+function warnCompareFull() {
+  compareWarn.value = `한 번에 ${COMPARE_MAX}개까지 비교할 수 있습니다`
+  clearTimeout(warnTimer)
+  warnTimer = setTimeout(() => (compareWarn.value = ''), 2600)
+}
+
+onBeforeUnmount(() => clearTimeout(warnTimer))
 
 /* ------------------------------------------------------------------ *
  * 주소창 동기화
@@ -363,6 +427,157 @@ onMounted(() => {
 .create-course-btn {
   white-space: nowrap;
   text-decoration: none;
+}
+
+/* 최근 본 슬롯 */
+.recent-section {
+  margin-bottom: 18px;
+  padding: 14px 16px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-bg-thin);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+}
+
+.recent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.recent-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--color-text-muted);
+}
+
+.recent-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  list-style: none;
+  padding-bottom: 2px;
+}
+
+.recent-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 176px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-edge);
+  background: var(--color-bg-primary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.recent-item:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.recent-item .badge { align-self: flex-start; }
+
+.recent-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  /* 두 줄까지만 — 제목 길이가 제각각이라 카드 높이가 들쭉날쭉해진다 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recent-fee {
+  margin-top: auto;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-text-secondary);
+}
+
+.text-btn {
+  padding: 0;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.text-btn:hover { color: var(--color-link); }
+
+/* 비교함 */
+.compare-bar {
+  position: sticky;
+  bottom: 20px;
+  z-index: 20;
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-glass), 0 18px 44px rgba(36, 34, 73, 0.16);
+}
+
+.compare-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.compare-count {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.compare-hint {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+.compare-warn {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.compare-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 9px 18px;
+  font-size: 13.5px;
+  border-radius: var(--radius-pill);
 }
 
 /* 검색 · 정렬 */
@@ -629,7 +844,9 @@ onMounted(() => {
 @media (prefers-reduced-transparency: reduce) {
   .filter-chip,
   .search-input,
-  .sort-select {
+  .sort-select,
+  .recent-section,
+  .compare-bar {
     background-color: var(--color-bg-primary);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
