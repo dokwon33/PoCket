@@ -14,7 +14,7 @@
         <!-- 평가는 저절로 쌓이지 않는다. 남길 차례가 있으면 메뉴에서 먼저 말한다. -->
         <span v-if="item.badge" class="si-badge">
           {{ item.badge }}
-          <span class="sr-only">건의 평가를 남길 차례입니다</span>
+          <span class="sr-only">건의 확정된 실증을 아직 확인하지 않았습니다</span>
         </span>
       </router-link>
     </div>

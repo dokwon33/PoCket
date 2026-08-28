@@ -15,7 +15,7 @@
           <!-- 평가는 저절로 쌓이지 않는다. 남길 차례가 있으면 여기서 먼저 말한다. -->
           <span v-if="pendingReviewCount" class="nav-badge">
             {{ pendingReviewCount }}
-            <span class="sr-only">건의 평가를 남길 차례입니다</span>
+            <span class="sr-only">건의 확정된 실증을 아직 확인하지 않았습니다</span>
           </span>
         </router-link>
       </nav>
@@ -43,6 +43,7 @@ import { useAuthStore } from '@/store/auth.js'
 import { useRouter } from 'vue-router'
 import { isHost } from '@/domain/pocket.js'
 import { clearPendingReviews, pendingReviewCount, primePendingReviews } from '@/domain/pendingReviews.js'
+import { clearSeenMemory, loadSeen } from '@/domain/seenEnrollments.js'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -59,14 +60,21 @@ const host = computed(() => isHost(auth.user?.role))
 watch(
   () => [auth.isAuthenticated, host.value],
   ([signedIn, isHostUser]) => {
-    if (signedIn && !isHostUser) primePendingReviews()
-    else clearPendingReviews()
+    if (signedIn && !isHostUser) {
+      // 확인 목록을 먼저 읽어야 배지가 한 번 부풀었다 줄어드는 깜빡임이 없다
+      loadSeen(auth.user?.id)
+      primePendingReviews()
+    } else {
+      clearPendingReviews()
+      clearSeenMemory()
+    }
   },
   { immediate: true }
 )
 
 function handleLogout() {
   clearPendingReviews()
+  clearSeenMemory()
   auth.logout()
 }
 </script>
