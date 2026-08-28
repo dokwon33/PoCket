@@ -13,8 +13,7 @@
 
 **제공된 서비스는 최대한 그대로 두고, 필요한 기능은 새 서비스로 확장합니다.**
 게이트웨이와 인증 서버는 소스가 없어 수정 자체가 불가능하고, 나머지 4개는 소스가 있지만
-손대지 않는 것을 원칙으로 삼았습니다. 지금까지의 예외는 두 건으로, 결제 금액 버그 수정과
-역할 enum 을 도메인 언어(`HOST`/`STARTUP`)로 맞춘 것입니다.
+손대지 않는 것을 원칙으로 삼았습니다. 지금까지의 예외는 결제 금액 버그 수정 한 건입니다.
 
 ---
 
@@ -603,25 +602,22 @@ API 명세서를 작성할 수 있습니다.
 **1. 제공된 백엔드는 되도록 수정하지 않는다.**
 게이트웨이와 인증 서버는 소스가 없어 아예 고칠 수 없습니다. 나머지 4개는 소스가 있지만,
 기능이 필요하면 기존 서비스를 고치는 대신 새 서비스를 옆에 붙이거나 화면에서 우회합니다.
-예외는 **명백한 버그와 도메인 언어 정합성**입니다. 지금까지 두 건을 고쳤습니다.
+예외는 **화면에서 우회할 수 없는 버그**뿐입니다. 지금까지 한 건을 고쳤습니다.
 
 | 대상 | 내용 | 재빌드가 필요한 서비스 |
 |---|---|---|
 | `EnrollmentService` | 결제 금액이 `99000` 으로 하드코딩되어 슬롯 가격과 무관하게 결제됨 | enrollment-service |
-| `User.Role` | `STUDENT`/`INSTRUCTOR` 를 `STARTUP`/`HOST` 로 변경. review-service 의 `reviewer_role` 과 표기가 통일됨 | user-service, course-service |
+
+역할 enum 을 `STARTUP`/`HOST` 로 바꾸는 변경도 한 번 들어왔다가 되돌렸습니다(PR #14 → #20).
+`User.Role` 은 템플릿 그대로 `STUDENT`/`INSTRUCTOR` 이고, review-service 의 `reviewer_role`
+(`HOST`/`STARTUP`)은 처음부터 별개의 값입니다. 두 값이 다르다는 사실은
+[`pocket.js`](vue-frontend/src/domain/pocket.js) 주석에 적어 두었습니다.
 
 수정한 서비스는 이미지를 다시 빌드해야 반영됩니다.
 
 ```bash
-docker compose -f docker-compose.build.yml build enrollment-service user-service course-service
-docker compose up -d enrollment-service user-service course-service
-```
-
-역할 값을 바꿨으므로 기존 볼륨의 `users.role` 도 갱신 대상입니다. 새로 시작하는 편이 안전합니다.
-
-```bash
-docker compose down -v && docker compose up -d
-docker exec -i lecturedb mariadb -umanager -pSqlDba-1 lecture_db < seed/pocket_seed.sql
+docker compose -f docker-compose.build.yml build enrollment-service
+docker compose up -d enrollment-service
 ```
 
 **2. 화면에 보이는 도메인 용어는 `pocket.js`에서만 정의한다.**
