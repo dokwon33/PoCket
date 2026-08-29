@@ -1,5 +1,5 @@
 # PoCket — 테스트베드 실증 매칭 플랫폼
-
+<img width="289" height="117" alt="image" src="https://github.com/user-attachments/assets/034e5273-9ba0-4d56-8589-a64b915c9850" />
 > The following practice code is intended for educational purposes only.
 > For contact: audit@korea.ac.kr, Sungryel Lim Ph.D
 >
@@ -14,9 +14,8 @@
 **제공된 서비스는 최대한 그대로 두고, 필요한 기능은 새 서비스로 확장합니다.**
 게이트웨이와 인증 서버는 소스가 없어 수정 자체가 불가능하고, 나머지 4개는 소스가 있지만
 손대지 않는 것을 원칙으로 삼았습니다. 지금까지의 예외는 결제 금액 버그 수정 한 건입니다.
-<img width="289" height="117" alt="image" src="https://github.com/user-attachments/assets/2627e09e-c305-41d9-8507-a88b8e4cd22b" />
+<img width="760" height="560" alt="image" src="https://github.com/user-attachments/assets/0aa0ea7a-37b3-4420-8a64-5ba645be85d6" />
 
-<img width="289" height="117" alt="image" src="https://github.com/user-attachments/assets/034e5273-9ba0-4d56-8589-a64b915c9850" />
 
 ---
 
